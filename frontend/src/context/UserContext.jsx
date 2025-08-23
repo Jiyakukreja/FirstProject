@@ -1,21 +1,20 @@
 import React, { createContext, useState } from 'react';
 
-// Context banaya
-export const UserDataContext = createContext();
+export const UserContext = createContext();
 
 const UserProvider = ({ children }) => {
   const [user, setUser] = useState({
     email: '',
-    fullName: {
-      firstName: '',
-      lastName: ''
+    fullname: {
+      firstname: '',
+      lastname: ''
     }
   });
 
   return (
-    <UserDataContext.Provider value={{ user, setUser }}>
+    <UserContext.Provider value={{ user, setUser }}>
       {children}
-    </UserDataContext.Provider>
+    </UserContext.Provider>
   );
 };
 

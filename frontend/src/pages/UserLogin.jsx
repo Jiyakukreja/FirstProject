@@ -21,7 +21,7 @@ const UserLogin = () => {
   return (
     <div
       className="h-screen w-full flex flex-col bg-cover bg-center"
-      style={{ backgroundImage: `url(${loginBg})` }} // 👈 background applied
+      style={{ backgroundImage: `url(${loginBg})` }} 
     >
       <div className="relative flex-grow flex items-center justify-center">
         

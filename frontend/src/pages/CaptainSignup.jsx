@@ -42,7 +42,7 @@ const CaptainSignup = () => {
         </Link>
 
         {/* Box broad kiya - max-w-lg, padding aur shadow bhi improve */}
-        <div className="font-serif bg-[#f2e5d1] p-6 rounded-2xl shadow-2xl w-full max-w-lg border-4 border-[#13006d]">
+        <div className="font-serif bg-[#f2e5d1] p-6 rounded-2xl shadow-2xl w-full max-w-md border-4 border-[#13006d]">
           <form onSubmit={submitHandler} className="flex flex-col">
             
             <div className="flex justify-center mb-6">

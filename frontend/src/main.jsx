@@ -1,11 +1,13 @@
+import React from 'react';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import './index.css';
 import App from './App.jsx';
 import { BrowserRouter } from 'react-router-dom';
-import UserProvider from './context/userContext.jsx';  // ✅ import default UserProvider
+import UserProvider from './context/UserContext.jsx';
 
-createRoot(document.getElementById('root')).render(
+const root = createRoot(document.getElementById('root'));
+root.render(
   <StrictMode>
     <UserProvider>
       <BrowserRouter>

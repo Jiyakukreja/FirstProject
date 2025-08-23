@@ -17,7 +17,12 @@ module.exports.authUser = async (req, res, next) => {
 
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        const user = await userModel.findById(decoded._id).select('+password');  // ✅ fixed
+        // token may contain either `id` or `_id`
+        const userId = decoded._id || decoded.id;
+        if (!userId) return res.status(401).json({ message: 'Invalid token payload' });
+
+        // don't select password when attaching user to req for general use
+        const user = await userModel.findById(userId);
 
         if (!user) {
             return res.status(401).json({ message: 'User not found' });
@@ -26,7 +31,7 @@ module.exports.authUser = async (req, res, next) => {
         req.user = user;
         next();
     } catch (err) {
-        return res.status(401).json({ message: 'Invalid token' }); 
+        return res.status(401).json({ message: 'Invalid token' });
     }
 };
 

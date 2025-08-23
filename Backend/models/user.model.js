@@ -16,7 +16,8 @@ const userSchema = new mongoose.Schema({
 
 // Instance method
 userSchema.methods.generateAuthToken = function () {
-    return jwt.sign({ id: this._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    // include _id to be consistent with captain token payload
+    return jwt.sign({ _id: this._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
 };
 
 // Instance method

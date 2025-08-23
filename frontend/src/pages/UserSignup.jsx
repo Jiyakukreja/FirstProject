@@ -8,23 +8,47 @@ const UserSignup = () => {
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [userData, setUserData] = useState({});
-
-  const submitHandler = (e) => {
+  const submitHandler = async (e) => {
     e.preventDefault();
-    setUserData({
-      username:{
-        firstName:firstName,
-        lastname:lastName
+
+    // Build payload matching backend expected shape
+    const payload = {
+      fullname: {
+        firstname: firstName,
+        lastname: lastName,
       },
-      email:email,
-      password:password
-    })
-    console.log(userData);
-    setFirstName("");
-    setLastName("");
-    setEmail("");
-    setPassword("");
+      email,
+      password,
+    };
+
+    try {
+      const res = await fetch('http://localhost:4000/users/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+      console.log('Signup response:', data);
+
+      if (!res.ok) {
+        // show server validation or error message
+        alert(data.message || (data.errors && data.errors[0]?.msg) || 'Signup failed');
+        return;
+      }
+
+      // Success: you can redirect to login or show a success message
+      alert('Signup successful');
+
+      // Clear inputs
+      setFirstName('');
+      setLastName('');
+      setEmail('');
+      setPassword('');
+    } catch (err) {
+      console.error('Signup error:', err);
+      alert('Network error, please try again');
+    }
   };
 
   return (

@@ -35,6 +35,8 @@ module.exports.registerCaptain = async (req, res, next) => {
 
     const token = captain.generateAuthToken();
 
+    // set httpOnly cookie for security
+    res.cookie('token', token, { httpOnly: true });
     res.status(201).json({ token, captain });
 
 }
@@ -61,7 +63,7 @@ module.exports.loginCaptain = async (req, res) => {
 
     const token = captain.generateAuthToken();
 
-    res.cookie('token',token);
+    res.cookie('token', token, { httpOnly: true });
 
     res.status(200).json({ token, captain });
 }
