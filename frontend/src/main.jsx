@@ -5,14 +5,17 @@ import './index.css';
 import App from './App.jsx';
 import { BrowserRouter } from 'react-router-dom';
 import UserProvider from './context/UserContext.jsx';
+import CaptainContext from './context/CaptainContext.jsx';
 
 const root = createRoot(document.getElementById('root'));
 root.render(
   <StrictMode>
+          <CaptainContext>
     <UserProvider>
-      <BrowserRouter>
-        <App />
-      </BrowserRouter>
-    </UserProvider>
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
+      </UserProvider>
+    </CaptainContext>
   </StrictMode>
 );

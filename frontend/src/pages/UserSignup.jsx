@@ -1,5 +1,7 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useState, useContext } from "react";
+import { Link, useNavigate } from "react-router-dom";  
+import { UserContext } from "../context/UserContext"; 
+import axios from "axios";
 import userSignup from '../images/userSignup.png'; 
 import logo from '../images/logobg.png';
 
@@ -8,10 +10,13 @@ const UserSignup = () => {
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  const { setUser } = useContext(UserContext);
+  const navigate = useNavigate(); 
+
   const submitHandler = async (e) => {
     e.preventDefault();
 
-    // Build payload matching backend expected shape
     const payload = {
       fullname: {
         firstname: firstName,
@@ -22,32 +27,49 @@ const UserSignup = () => {
     };
 
     try {
-      const res = await fetch('http://localhost:4000/users/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
+      const response = await axios.post(
+        `${import.meta.env.VITE_BASE_URL}/users/register`, 
+        payload
+      );
 
-      const data = await res.json();
-      console.log('Signup response:', data);
+      // ✅ 200 (OK) ya 201 (Created) dono handle karo
+      if (response.status === 200 || response.status === 201) {
+        const data = response.data;
+        console.log("Signup Response:", data);
 
-      if (!res.ok) {
-        // show server validation or error message
-        alert(data.message || (data.errors && data.errors[0]?.msg) || 'Signup failed');
-        return;
+        // token ko localStorage me daalna
+        if (data.token) {
+          localStorage.setItem("token", data.token);
+          console.log("Signup Token:", data.token);
+        }
+
+        // user ko context me set karna
+        if (data.user) {
+          setUser(data.user);
+        } else {
+          // fallback agar backend user directly na bheje
+          setUser({
+            email: data.email || email,
+            fullname: {
+              firstname: data.fullname?.firstname || firstName,
+              lastname: data.fullname?.lastname || lastName
+            }
+          });
+        }
+
+        // form reset
+        setFirstName('');
+        setLastName('');
+        setEmail('');
+        setPassword('');
+
+        navigate('/home');
+      } else {
+        alert(response.data.message || "Signup failed");
       }
-
-      // Success: you can redirect to login or show a success message
-      alert('Signup successful');
-
-      // Clear inputs
-      setFirstName('');
-      setLastName('');
-      setEmail('');
-      setPassword('');
     } catch (err) {
-      console.error('Signup error:', err);
-      alert('Network error, please try again');
+      console.error("Signup failed:", err);
+      alert(err.response?.data?.message || "Something went wrong");
     }
   };
 
@@ -65,11 +87,8 @@ const UserSignup = () => {
           <span className="text-black text-lg font-serif">Back to Home</span>
         </Link>
 
-        {/* Box broad kiya - max-w-lg */}
-       <div className="font-serif bg-[#f2e5d1] p-6 rounded-2xl shadow-2xl w-full max-w-lg border-4 border-[#13006d]">
-
+        <div className="font-serif bg-[#f2e5d1] p-6 rounded-2xl shadow-2xl w-full max-w-lg border-4 border-[#13006d]">
           <form onSubmit={submitHandler} className="flex flex-col">
-            
             <div className="flex justify-center mb-6">
               <img src={logo} alt="Raahi Logo" className="h-14 w-auto" />
             </div>

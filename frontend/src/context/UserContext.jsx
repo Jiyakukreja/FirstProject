@@ -11,8 +11,10 @@ const UserProvider = ({ children }) => {
     }
   });
 
+  const [isLoading, setIsLoading] = useState(false); // Added loading state
+
   return (
-    <UserContext.Provider value={{ user, setUser }}>
+    <UserContext.Provider value={{ user, setUser, isLoading, setIsLoading }}>
       {children}
     </UserContext.Provider>
   );
