@@ -1,62 +1,132 @@
-import React, { useState, useRef } from 'react';
-import logo from '../images/image.png';
-import map from '../images/map.png';
-import { useGSAP } from '@gsap/react';
-import { gsap } from 'gsap';
-import 'remixicon/fonts/remixicon.css';
-import LocationSearchPanel from '../components/LocationSearchPanel';
-import Cabinfo from '../components/Cabinfo';
+import React, { useState, useRef, useEffect } from "react";
+import logo from "../images/image.png";
+import map from "../images/map.png";
+import { useGSAP } from "@gsap/react";
+import { gsap } from "gsap";
+import "remixicon/fonts/remixicon.css";
+import LocationSearchPanel from "../components/LocationSearchPanel";
+import Cabinfo from "../components/Cabinfo";
+import ConfirmedRide from "../components/ConfirmedRide";
+import WaitingForDriver from "../components/WaitingForDriver";
+
+// Payment Components
+import Modal from "../components/Modal";
+import AddPayment from "../components/AddPayment";
+import Cash from "../components/Cash";
+import GiftCard from "../components/GiftCard";
 
 const Home = () => {
   const [pickup, setPickup] = useState("");
   const [destination, setDestination] = useState("");
   const [panelOpen, setPanelOpen] = useState(false);
+  const [vehiclePanelOpen, setVehiclePanelOpen] = useState(false);
+  const [rideConfirmed, setRideConfirmed] = useState(false);
+  const [showWaiting, setShowWaiting] = useState(false);
 
-  const [vehiclePanel, setVehiclePanel] = useState(false);
+  // Payment step state
+  const [paymentStep, setPaymentStep] = useState(null);
 
+  const vehiclePanelRef = useRef(null);
   const panelRef = useRef(null);
   const formRef = useRef(null);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log("Pickup:", pickup);
-    console.log("Destination:", destination);
+    if (pickup && destination) {
+      setVehiclePanelOpen(true);
+    }
   };
 
-  // GSAP animation for panel & form shift
+  // GSAP animation for search panel
   useGSAP(() => {
     if (panelOpen) {
       gsap.to(panelRef.current, {
-        height: "40%",   // fixed height
+        height: "40%",
         duration: 0.5,
-        ease: "power2.out"
+        ease: "power2.out",
       });
-
       gsap.to(formRef.current, {
         y: -145,
         duration: 0.5,
-        ease: "power2.out"
+        ease: "power2.out",
       });
     } else {
       gsap.to(panelRef.current, {
         height: "0%",
         duration: 0.5,
-        ease: "power2.in"
+        ease: "power2.in",
       });
-
       gsap.to(formRef.current, {
         y: 0,
         duration: 0.5,
-        ease: "power2.in"
+        ease: "power2.in",
       });
     }
   }, [panelOpen]);
 
-  return (
-    <div className="relative min-h-screen p-4 bg-[#8eb4a7] flex flex-col">
+  // GSAP animation for vehicle panel
+  useGSAP(() => {
+    if (vehiclePanelOpen) {
+      gsap.fromTo(
+        vehiclePanelRef.current,
+        { y: "100%", display: "block" },
+        { y: "0%", duration: 1, ease: "power2.out" }
+      );
+    } else {
+      gsap.to(vehiclePanelRef.current, {
+        y: "100%",
+        duration: 1,
+        ease: "power2.in",
+        onComplete: () =>
+          gsap.set(vehiclePanelRef.current, { display: "none" }),
+      });
+    }
+  }, [vehiclePanelOpen]);
 
+  // ✅ Ride confirm screen → after 8 sec auto WaitingForDriver
+  useEffect(() => {
+    if (rideConfirmed) {
+      const timer = setTimeout(() => setShowWaiting(true), 8000);
+      return () => clearTimeout(timer);
+    }
+  }, [rideConfirmed]);
+
+  if (rideConfirmed) {
+    return showWaiting ? (
+      <WaitingForDriver />
+    ) : (
+      <ConfirmedRide
+        pickup={pickup}
+        destination={destination}
+        fare="₹97.46"
+        onCancel={() => {
+          setRideConfirmed(false);
+          setPickup("");
+          setDestination("");
+          setPanelOpen(false);
+          setVehiclePanelOpen(false);
+          setShowWaiting(false);
+        }}
+        onChangeDestination={() => {
+          setRideConfirmed(false);
+          setVehiclePanelOpen(false);
+          setTimeout(() => setPanelOpen(true), 100);
+          setShowWaiting(false);
+        }}
+      />
+    );
+  }
+
+  return (
+    <div className="relative min-h-screen bg-[#F2EDD1] flex flex-col">
       {/* Background Map */}
-      <div className="absolute inset-0">
+      <div
+        onClick={() => {
+          setVehiclePanelOpen(false);
+          setPanelOpen(false);
+        }}
+        className="absolute inset-0"
+      >
         <img src={map} alt="Map" className="h-full w-full object-cover" />
       </div>
 
@@ -68,13 +138,13 @@ const Home = () => {
       />
 
       {/* Bottom Main Card */}
-      <div className="absolute bottom-0 left-0 w-full bg-[#F2EDD1] z-10 rounded-lg pb-10">
+      <div className="absolute bottom-0 left-0 w-full z-10 pb-10">
         <div
           ref={formRef}
-          className="relative left-1/2 transform -translate-x-1/2 w-[65%] -top-28 bg-[#507a6c] px-9 py-7 shadow-lg flex flex-col rounded"
+          className="relative left-1/2 transform -translate-x-1/2 w-[75%] -top-28 bg-white border-4 border-gray-400 px-9 py-7 shadow-xl flex flex-col rounded-2xl border border-[#F9CB99]"
         >
           {/* Heading */}
-          <div className="bg-[#d3e2dd] text-2xl text-[#280A3E] font-serif w-auto h-auto px-6 py-3 font-semibold tracking-wider flex items-center justify-between">
+          <div className="bg-gradient-to-r from-[#280A3E] to-[#4B2A63] text-[#F2EDD1] text-2xl font-serif w-auto h-auto px-10 py-3 font-semibold tracking-wider flex items-center justify-between rounded-xl shadow">
             <span>Find a Trip</span>
             <h5 onClick={() => setPanelOpen(false)}>
               <i className="ri-arrow-down-wide-fill"></i>
@@ -84,14 +154,15 @@ const Home = () => {
           {/* Form */}
           <form onSubmit={handleSubmit} className="flex flex-col">
             <div className="flex flex-col gap-4 mt-4 relative">
-              <div className="line absolute h-20 w-1 top-[18%] left-7 bg-black rounded-md"></div>
+              <div className="line absolute h-20 w-1 top-[18%] left-7 bg-[#280A3E] rounded-md"></div>
+
               <input
                 onClick={() => setPanelOpen(true)}
                 type="text"
                 placeholder="Add a pick-up Location"
                 value={pickup}
                 onChange={(e) => setPickup(e.target.value)}
-                className="w-full p-3 px-12 bg-[#f6f2de] text-xl font-serif text-gray-900 tracking-wide border border-gray-400 focus:outline-none focus:ring-2 focus:ring-[#689B8A] focus:border-transparent"
+                className="w-full p-3 px-12 bg-white text-lg font-serif border border-gray-500 focus:outline-none focus:ring-2 focus:ring-[#689B8A] rounded-lg"
                 required
               />
               <input
@@ -100,7 +171,7 @@ const Home = () => {
                 placeholder="Enter your Destination"
                 value={destination}
                 onChange={(e) => setDestination(e.target.value)}
-                className="w-full p-3 px-12 text-xl bg-[#f6f2de] font-serif text-gray-900 tracking-wide border border-gray-400 focus:outline-none focus:ring-2 focus:ring-[#689B8A] focus:border-transparent"
+                className="w-full p-3 px-12 text-lg bg-white font-serif border border-gray-500 focus:outline-none focus:ring-2 focus:ring-[#689B8A] rounded-lg"
                 required
               />
             </div>
@@ -109,14 +180,13 @@ const Home = () => {
             <div className="flex gap-4 mt-8">
               <button
                 type="submit"
-                className="flex-1 bg-[#F9CB99] text-[#280A3E] font-serif text-lg font-semibold py-3 shadow hover:bg-[#f7b971] transition"
+                className="flex-1 bg-[#689B8A] text-white font-serif text-lg font-semibold py-3 rounded-xl shadow hover:bg-[#51756A] transition"
               >
                 See Prices
               </button>
               <button
                 type="button"
-                className="flex-1 bg-[#d3e2dd] text-[#280A3E] font-serif text-lg font-semibold py-3 shadow hover:bg-[#c1d6ce] transition"
-                onClick={() => alert("Scheduled for later")}
+                className="flex-1 bg-[#280A3E] text-[#F2EDD1] font-serif text-lg font-semibold py-3 rounded-xl shadow hover:bg-[#3B1656] transition"
               >
                 Schedule for Later
               </button>
@@ -125,24 +195,65 @@ const Home = () => {
         </div>
       </div>
 
-{/* Slide-up Panel with LocationSearchPanel */}
-<div
-  ref={panelRef}
-  className="absolute bottom-0 left-0 w-full h-0 z-20 shadow-2xl rounded-t-2xl overflow-y-auto"
-  style={{ maxHeight: "40%" }}
->
-  <div className="relative left-1/2 transform -translate-x-1/2 w-[65%] mt-4 flex flex-col gap-4">
-    {/* Location suggestions */}
-    <LocationSearchPanel onClose={() => setPanelOpen(false)} />
-</div>
-</div>
+      {/* Slide-up Panel */}
+      <div
+        ref={panelRef}
+        className="absolute bottom-0 left-0 w-full h-0 z-20 shadow-2xl rounded-t-2xl overflow-y-auto"
+        style={{ maxHeight: "40%" }}
+      >
+        <div className="relative left-1/2 transform -translate-x-1/2 w-[65%] mt-6 flex flex-col gap-4">
+          <LocationSearchPanel
+            setPanelOpen={setPanelOpen}
+            onClose={() => setPanelOpen(false)}
+            setVehiclePanel={setVehiclePanelOpen}
+          />
+        </div>
+      </div>
 
-<div className="absolute bottom-14 left-0 w-full bg-[#431167] shadow-md rounded-2xl p-6 z-30">
-  <h2 className='text-white font-serif text-3xl font-bold pb-3'>Choose a Vehicle</h2>
-  <Cabinfo />
-</div>
+      {/* Vehicle Panel */}
+      <div
+        ref={vehiclePanelRef}
+        className="absolute translate-y-full bottom-0 left-0 w-full h-[90%] bg-[#280A3E] shadow-lg rounded-t-2xl px-6 py-4 z-30 flex flex-col"
+      >
+        <div className="flex flex-col items-center pb-3 flex-shrink-0">
+          <h5
+            onClick={() => setVehiclePanelOpen(false)}
+            className="text-[#F2EDD1] text-3xl cursor-pointer mb-2"
+          >
+            <i className="ri-arrow-down-wide-fill"></i>
+          </h5>
+          <h2 className="text-[#F2EDD1] text-center font-serif text-3xl font-bold">
+            Choose a Vehicle
+          </h2>
+        </div>
+        <div className="flex-1 overflow-y-auto">
+          <Cabinfo onCabSelect={() => setPaymentStep("add")} />
+        </div>
+      </div>
 
-</div>
+      {/* Payment Modal */}
+      <Modal isOpen={!!paymentStep} onClose={() => setPaymentStep(null)}>
+        {paymentStep === "add" && (
+          <AddPayment onSelect={(method) => setPaymentStep(method)} />
+        )}
+        {paymentStep === "cash" && (
+          <Cash
+            onConfirm={() => {
+              setPaymentStep(null);
+              setRideConfirmed(true);
+            }}
+          />
+        )}
+        {paymentStep === "giftcard" && (
+          <GiftCard
+            onConfirm={() => {
+              setPaymentStep(null);
+              setRideConfirmed(true);
+            }}
+          />
+        )}
+      </Modal>
+    </div>
   );
 };
 

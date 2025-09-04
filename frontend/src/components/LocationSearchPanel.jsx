@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 
-const LocationSearchPanel = () => {
+const LocationSearchPanel = ({ setVehiclePanel }) => {
   const [activeIndex, setActiveIndex] = useState(null);
 
-  // Random Punjab/Chandigarh locations
   const locations = [
     "Sector 17, Chandigarh",
     "Elante Mall, Chandigarh",
@@ -13,20 +12,38 @@ const LocationSearchPanel = () => {
     "Sukhna Lake, Chandigarh"
   ];
 
+  const handleClick = (index) => {
+    setActiveIndex(index);
+    setTimeout(() => setActiveIndex(null), 300);
+  };
+
   return (
-    <div className='p-4 bg-[#c3d7d0] rounded-xl'>
+    <div className="p-5 bg-gray-300 rounded-xl shadow-xl border border-gray-700">
       {locations.map((loc, index) => (
         <div
+          onClick={() => { setVehiclePanel(true); handleClick(index); }}
           key={index}
-          onClick={() => setActiveIndex(index)}
-          className={`flex items-center border-2 border-r-4 rounded-xl justify-start font-serif px-5 py-2 mb-4 bg-white cursor-pointer transform transition-all duration-300
-            ${activeIndex === index ? 'border-black -translate-y-2 shadow-lg' : 'border-gray-200 translate-y-0'}
+          className={`flex items-center border-2 border-gray-700 rounded-xl justify-start font-serif px-5 py-3 mb-4 cursor-pointer transition-all duration-300
+            ${
+              activeIndex === index
+                ? 'border-[#4B0082] bg-[#4B0082] text-white scale-105 shadow-lg'
+                : 'border-gray-300 bg-[#F9FAFB] hover:border-[#4B0082] hover:shadow-md'
+            }
           `}
         >
-          <h2 className='bg-[#eee] h-10 w-10 flex items-center justify-center rounded-full p-0 mr-2'>
-            <i className="ri-map-pin-fill text-xl"></i>
-          </h2>
-          <h4 className='py-2 px-4 text-lg'>{loc}</h4>
+          {/* Icon */}
+          <div className={`h-10 w-10 flex items-center justify-center rounded-full mr-3 transition
+            ${activeIndex === index ? 'bg-white text-[#3BB273]' : 'bg-[#3BB273] text-white'}
+          `}>
+            <i className="ri-map-pin-fill text-lg"></i>
+          </div>
+
+          {/* Location Name */}
+          <h4 className={`text-lg font-medium tracking-wide ${
+            activeIndex === index ? 'text-white' : 'text-gray-800'
+          }`}>
+            {loc}
+          </h4>
         </div>
       ))}
     </div>
