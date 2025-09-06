@@ -1,8 +1,10 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import mapImg from "../images/map.png";
 
 const WaitingForDriver = ({ onCancel }) => {
   const [showConfirm, setShowConfirm] = useState(false);
+  const navigate = useNavigate();
 
   // Driver data (only men with images)
   const drivers = [
@@ -175,7 +177,11 @@ const WaitingForDriver = ({ onCancel }) => {
                 Back
               </button>
               <button
-                onClick={onCancel}
+                onClick={() => {
+                  if (onCancel) onCancel();
+                  navigate("/home");
+                  window.location.replace("/home");
+                }}
                 className="px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600"
               >
                 Yes, Cancel

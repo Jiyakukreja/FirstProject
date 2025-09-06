@@ -73,7 +73,7 @@ const Cabinfo = ({ onCabSelect }) => {
         onClick={onCabSelect}
       />
 
-      <h2 className="text-xl font-serif font-bold text-[#280A3E] bg-gradient-to-r from-[#F9CB99] to-[#F2EDD1] px-4 py-2 rounded-lg shadow-md mt-6">
+      <h2 className="text-xl font-serif font-bold text-white bg-gradient-to-r from-[#280A3E] to-[#280A3E] px-4 py-2 rounded-lg shadow-md mt-6">
         Economy Rides
       </h2>
 

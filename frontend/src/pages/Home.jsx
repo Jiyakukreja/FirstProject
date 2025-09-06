@@ -8,6 +8,7 @@ import LocationSearchPanel from "../components/LocationSearchPanel";
 import Cabinfo from "../components/Cabinfo";
 import ConfirmedRide from "../components/ConfirmedRide";
 import WaitingForDriver from "../components/WaitingForDriver";
+import Riding from "../components/Riding";
 
 // Payment Components
 import Modal from "../components/Modal";
@@ -22,6 +23,7 @@ const Home = () => {
   const [vehiclePanelOpen, setVehiclePanelOpen] = useState(false);
   const [rideConfirmed, setRideConfirmed] = useState(false);
   const [showWaiting, setShowWaiting] = useState(false);
+  const [showRiding, setShowRiding] = useState(false);
 
   // Payment step state
   const [paymentStep, setPaymentStep] = useState(null);
@@ -83,18 +85,31 @@ const Home = () => {
     }
   }, [vehiclePanelOpen]);
 
-  // ✅ Ride confirm screen → after 8 sec auto WaitingForDriver
+  // ✅ Ride confirm screen → after 8 sec auto WaitingForDriver, then 5 sec auto Riding
   useEffect(() => {
+    let waitingTimer;
     if (rideConfirmed) {
-      const timer = setTimeout(() => setShowWaiting(true), 8000);
-      return () => clearTimeout(timer);
+      waitingTimer = setTimeout(() => setShowWaiting(true), 8000);
     }
+    return () => clearTimeout(waitingTimer);
   }, [rideConfirmed]);
 
+  useEffect(() => {
+    let ridingTimer;
+    if (showWaiting) {
+      ridingTimer = setTimeout(() => setShowRiding(true), 5000);
+    }
+    return () => clearTimeout(ridingTimer);
+  }, [showWaiting]);
+
   if (rideConfirmed) {
-    return showWaiting ? (
-      <WaitingForDriver />
-    ) : (
+    if (showRiding) {
+      return <Riding />;
+    }
+    if (showWaiting) {
+      return <WaitingForDriver />;
+    }
+    return (
       <ConfirmedRide
         pickup={pickup}
         destination={destination}
@@ -106,12 +121,14 @@ const Home = () => {
           setPanelOpen(false);
           setVehiclePanelOpen(false);
           setShowWaiting(false);
+          setShowRiding(false);
         }}
         onChangeDestination={() => {
           setRideConfirmed(false);
           setVehiclePanelOpen(false);
           setTimeout(() => setPanelOpen(true), 100);
           setShowWaiting(false);
+          setShowRiding(false);
         }}
       />
     );
