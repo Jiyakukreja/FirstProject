@@ -1,20 +1,20 @@
 import React, { useEffect, useState } from "react";
-import mapImg from "../images/map.png"; // Right side map background
+import mapImg from "../images/map.png";
 
-const ConfirmedRide = ({ 
-  pickup = "Default Pickup Location", 
-  destination = "Default Destination", 
-  fare = "₹0", 
+const ConfirmedRide = ({
+  pickup = "Default Pickup Location",
+  destination = "Default Destination",
+  fare = "₹0",
+  vehicleType = "Car", // 👈 selected cab type
   onCancel,
-  onChangeDestination  // 👈 naya prop
+  onChangeDestination,
 }) => {
-
   const texts = [
-    "Finding you a driver!",
-    "Confirming your ride!",
-    "Almost there!",
+    "Finding you a driver...",
+    "Confirming your ride...",
+    "Almost there...",
     "Hang tight, a cab is on the way!",
-    "Just a moment, securing your ride!"
+    "Just a moment, securing your ride...",
   ];
 
   const [currentText, setCurrentText] = useState(0);
@@ -22,121 +22,86 @@ const ConfirmedRide = ({
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentText((prev) => (prev + 1) % texts.length);
-    }, 3000); // change text every 3s
+    }, 3000);
     return () => clearInterval(interval);
   }, []);
 
+  // Handle fare display: show only selected vehicle
+  let displayFare;
+  if (typeof fare === "object") {
+    displayFare = `₹${fare[vehicleType.toLowerCase()]}`;
+  } else {
+    displayFare = fare;
+  }
+
   return (
-    <div className="flex w-full h-screen">
-      {/* Left Side Panel */}
-      <div className="w-[40%] bg-[#F2EDD1] flex flex-col shadow-lg">
+    <div className="flex w-full h-screen font-serif bg-[#F2EDD1]">
+      {/* Left Panel */}
+      <div className="w-[40%] bg-[#F2EDD1] flex flex-col shadow-lg border-r border-gray-300">
         {/* Top Header */}
-        <div className="bg-gradient-to-r from-[#280A3E] to-[#3B1656] p-8 shadow-md flex flex-col items-center">
-          <h2 className="text-3xl font-serif font-bold text-[#F2EDD1] text-center mb-4 mt-2">
+        <div className="bg-gradient-to-r from-[#3B1656] to-[#280A3E] p-8 shadow-md flex flex-col items-center">
+          <h2 className="text-2xl md:text-3xl font-bold text-[#F2EDD1] text-center mb-4">
             {texts[currentText]}
           </h2>
-
-          {/* Loading Bar */}
-          <div className="mt-3 h-2 w-full bg-[#3B1656] rounded-full overflow-hidden">
-            <div className="h-full w-1/4 bg-[#F9CB99] animate-[loading_1.5s_linear_infinite] rounded-full"></div>
+          <div className="mt-3 h-2 w-full bg-[#4a275c] rounded-full overflow-hidden">
+            <div className="h-full w-1/3 bg-[#F9CB99] animate-[loading_1.5s_linear_infinite] rounded-full"></div>
           </div>
         </div>
 
-        {/* Ride Details Card */}
+        {/* Ride Info */}
         <div className="p-8 flex-1 flex flex-col justify-between">
-          <div className="bg-white border-2 border-gray-600 h-70 border-[#F9CB99] rounded-2xl shadow-lg p-9">
-            <div className="mb-4">
-              {/* Pickup */}
-              <div className="flex items-center gap-6  mb-3">
-                <span className="w-4 h-4 bg-[#689B8A] rounded-full"></span>
-                <p className="text-lg font-serif text-gray-700">
-                  <span className="font-semibold p-6">Meet at MHC Market</span> {pickup}
-                </p>
+          <div className="bg-white border border-gray-300 rounded-2xl shadow-lg p-8 h-[320px] flex flex-col justify-between">
+            {/* Pickup */}
+            <div>
+              <div className="flex items-start gap-4 mb-4">
+                <span className="w-3 h-3 bg-green-600 rounded-full mt-1"></span>
+                <p className="text-lg text-gray-800">{pickup}</p>
               </div>
-              {/* Destination + Change Button */}
-              <div className="flex items-center gap-6 mt-6 mb-6">
-                <span className="w-4 h-4 bg-[#280A3E] rounded-sm"></span>
-                <p className="text-lg font-serif text-gray-700 flex-1 flex justify-between items-center">
-                  <span>
-                    <span className="font-semibold p-6">Nexus Elante Mall</span> {destination}
-                  </span>
-                  {/* 👇 Change Button */}
+
+              {/* Destination */}
+              <div className="flex items-start gap-4 mb-6">
+                <span className="w-3 h-3 bg-purple-800 rounded-sm mt-1"></span>
+                <div className="flex-1 flex justify-between items-center">
+                  <p className="text-lg text-gray-800">{destination}</p>
                   <button
                     onClick={onChangeDestination}
                     className="ml-4 px-3 py-1 text-sm bg-[#280A3E] text-white rounded-full hover:bg-[#3B1656] transition"
                   >
                     Change
                   </button>
-                </p>
+                </div>
               </div>
             </div>
 
-            {/* Fare with wallet icon */}
-            <div className="flex flex-col items-start mt-6">
-              <div className="flex items-center gap-7">
-                <i className="ri-wallet-3-line text-2xl text-[#280A3E]"></i>
-                <span className="text-xl p-2 font-bold text-[#280A3E]">
-                  {fare}
-                </span>
-              </div>
-              <span className="text-base px-5 font-normal text-gray-600 ml-11">
-                Cash
-              </span>
+            {/* Selected Vehicle + Fare (LEFT ALIGNED NOW) */}
+            <div className="border-t border-gray-200 pt-4">
+              <p className="text-xl font-bold text-black">
+                {vehicleType}: {displayFare}
+              </p>
+              <p className="text-md text-gray-700 mt-1">{vehicleType}</p>
+              <p className="text-sm text-gray-500 mt-1">Payment: Cash</p>
             </div>
           </div>
 
           {/* Cancel Button */}
           <button
             onClick={onCancel}
-            className="mt-6 w-full py-3 text-lg border-4 border-red-400 text-red-600 bg-white rounded-xl shadow-sm hover:bg-red-50 transition font-serif"
+            className="mt-6 w-full py-3 text-lg border-2 border-red-400 text-red-600 bg-white rounded-xl shadow-sm hover:bg-red-50 transition"
           >
             Cancel Ride
           </button>
         </div>
       </div>
 
-      {/* Right Side Map */}
-<div className="flex-1 relative border border-gray-800 rounded-md">
-  <div
-    className="h-full bg-cover bg-center"
-    style={{ backgroundImage: `url(${mapImg})` }}
-  ></div>
-
-
-        {/* Bottom Bar */}
-        <div className="absolute bottom-0 left-0 w-full bg-[#F2EDD1] shadow-2xl border-t border-gray-700 border-[#F9CB99] py-4 rounded-t-xl">
-          <div className="flex justify-around px-4 gap-6">
-            {/* Card 1 */}
-            <div className="flex-1 bg-white rounded-xl shadow-md p-4 flex items-center gap-6 hover:scale-[1.02] transition cursor-pointer">
-              <i className="ri-car-line text-2xl text-[#280A3E]"></i>
-              <div>
-                <p className="text-sm font-semibold text-gray-800">Request more rides</p>
-                <p className="text-xs text-gray-500">For yourself or guests</p>
-              </div>
-            </div>
-
-            {/* Card 2 */}
-            <div className="flex-1 bg-white rounded-xl shadow-md p-4 flex items-center gap-6 hover:scale-[1.02] transition cursor-pointer">
-              <i className="ri-exchange-line text-2xl text-[#280A3E]"></i>
-              <div>
-                <p className="text-sm font-semibold text-gray-800">Send and receive</p>
-                <p className="text-xs text-gray-500">One or multiple items</p>
-              </div>
-            </div>
-
-            {/* Card 3 */}
-            <div className="flex-1 bg-white rounded-xl shadow-md p-4 flex items-center gap-6 hover:scale-[1.02] transition cursor-pointer">
-              <i className="ri-calendar-line text-2xl text-[#280A3E]"></i>
-              <div>
-                <p className="text-sm font-semibold text-gray-800">Reserve a ride</p>
-                <p className="text-xs text-gray-500">Up to 90 days ahead</p>
-              </div>
-            </div>
-          </div>
-        </div>
+      {/* Right Panel */}
+      <div className="flex-1 relative">
+        <div
+          className="h-full bg-cover bg-center"
+          style={{ backgroundImage: `url(${mapImg})` }}
+        ></div>
       </div>
 
-      {/* Loading Animation Keyframes */}
+      {/* Loading animation */}
       <style>
         {`
           @keyframes loading {

@@ -1,50 +1,65 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
-import captainLoginBg from "../images/logincap.png"; // 👈 background image import
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import captainLoginBg from "../images/logincap.png";
 import axios from "axios";
 import { CaptainDataContext } from "../context/CaptainContext";
 
-
 const CaptainLogin = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
-  const {captain, setCaptain} = React.useContext(CaptainDataContext);
+  const { setCaptain } = React.useContext(CaptainDataContext);
   const navigate = useNavigate();
-
-
 
   const submitHandler = async (e) => {
     e.preventDefault();
-    const captain ={
+
+    const loginData = {
       email: email,
-      password: password
+      password: password,
+    };
+
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_BASE_URL}/captain/login`,
+        loginData
+      );
+
+      if (response.status === 200) {
+        const data = response.data;
+        console.log("LOGIN RESPONSE:", data);
+
+        // ✅ Flatten fullname so CaptainHome can use captain.firstname / captain.lastname
+        const captainData = {
+          ...data.captain,
+          firstname: data.captain.fullname.firstname,
+          lastname: data.captain.fullname.lastname,
+        };
+
+        setCaptain(captainData);
+
+        // Save in localStorage if you want persistence
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("captain", JSON.stringify(captainData));
+
+        navigate("/captain/home");
+      }
+    } catch (error) {
+      console.error("Captain login error:", error);
     }
 
-    const response = await axios.post(`${import.meta.env.VITE_BASE_URL}/captain/login`, captain);
-
-    if(response.status === 200){
-      const data = response.data;
-
-      setCaptain(data.captain);
-      localStorage.setItem("token", data.token);
-      navigate("/captain/home");
-    }
-
-
-    setEmail('');
-    setPassword('');
+    setEmail("");
+    setPassword("");
   };
 
   return (
     <div
       className="h-screen w-full flex flex-col bg-cover bg-center"
-      style={{ backgroundImage: `url(${captainLoginBg})` }} 
+      style={{ backgroundImage: `url(${captainLoginBg})` }}
     >
       <div className="relative flex-grow flex items-center justify-center">
-        <Link 
-          to="/" 
+        <Link
+          to="/"
           className="absolute top-6 left-6 flex items-center space-x-2 text-lg font-medium text-[#280A3E] hover:text-[#3a1458] transition"
         >
           <span className="text-xl font-serif text-[#FFDEAD]">←</span>
@@ -57,21 +72,25 @@ const CaptainLogin = () => {
               Welcome Again Captain!
             </h2>
 
-            <label className="font-semibold text-xl text-[#280A3E] mb-2">Email Address</label>
+            <label className="font-semibold text-xl text-[#280A3E] mb-2">
+              Email Address
+            </label>
             <input
               required
               value={email}
-              onChange={(e)=> setEmail(e.target.value)}
+              onChange={(e) => setEmail(e.target.value)}
               type="email"
               placeholder="Enter your email"
               className="bg-[#FFDEAD] border-2 border-gray-400 mt-2 mb-4 px-4 py-3 rounded-md w-full text-[#280A3E] placeholder:text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#280A3E] focus:border-[#280A3E] shadow-md transition"
             />
 
-            <label className="font-semibold text-xl text-[#280A3E] mb-2">Password</label>
+            <label className="font-semibold text-xl text-[#280A3E] mb-2">
+              Password
+            </label>
             <input
               required
               value={password}
-              onChange={(e)=> setPassword(e.target.value)}
+              onChange={(e) => setPassword(e.target.value)}
               type="password"
               placeholder="Enter your password"
               className="bg-[#FFDEAD] border-2 border-gray-400 mt-2 mb-6 px-4 py-3 rounded-md w-full text-[#280A3E] placeholder:text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#280A3E] focus:border-[#280A3E] shadow-md transition"
@@ -82,13 +101,20 @@ const CaptainLogin = () => {
             </button>
 
             <p className="text-center  text-gray-700 mt-3 mb-2">
-              Join the fleet? <Link to='/captain-signup' className="text-[#13006d] hover:underline">Register as a Captain</Link>
+              Join the fleet?{" "}
+              <Link
+                to="/captain-signup"
+                className="text-[#13006d] hover:underline"
+              >
+                Register as a Captain
+              </Link>
             </p>
 
             <p className="text-center mt-4 text-lg">
-              <Link 
-                to="/login" 
-                className="block font-semibold border-2 border-[#280A3E] text-[#280A3E] mt-2 px-4 py-3 rounded-md w-full text-xl hover:bg-[#280A3E] hover:text-white transition tracking-wider text-center shadow-md">
+              <Link
+                to="/login"
+                className="block font-semibold border-2 border-[#280A3E] text-[#280A3E] mt-2 px-4 py-3 rounded-md w-full text-xl hover:bg-[#280A3E] hover:text-white transition tracking-wider text-center shadow-md"
+              >
                 Sign in as User
               </Link>
             </p>

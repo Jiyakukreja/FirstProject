@@ -2,11 +2,11 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import mapImg from "../images/map.png";
 
-const WaitingForDriver = ({ onCancel }) => {
+const WaitingForDriver = ({ pickup, destination, fare, onCancel }) => {
   const [showConfirm, setShowConfirm] = useState(false);
   const navigate = useNavigate();
 
-  // Driver data (only men with images)
+  // Driver data
   const drivers = [
     {
       name: "Ravi Kumar",
@@ -135,11 +135,10 @@ const WaitingForDriver = ({ onCancel }) => {
           <div className="p-6 border-b">
             <div className="ml-2 border-l-2 border-gray-900 pl-4">
               <p className="text-md font-bold font-serif text-gray-700 flex items-center gap-4 pt-2">
-                <i className="ri-map-pin-2-fill text-green-800"></i> MHC Market
+                <i className="ri-map-pin-2-fill text-green-800"></i> {pickup}
               </p>
               <p className="text-md font-bold font-serif text-gray-700 mt-2 flex items-center gap-4 pt-4">
-                <i className="ri-map-pin-line text-green-600"></i> Nexus Elante
-                Mall, Chandigarh
+                <i className="ri-map-pin-line text-green-600"></i> {destination}
               </p>
             </div>
           </div>
@@ -147,7 +146,7 @@ const WaitingForDriver = ({ onCancel }) => {
           {/* Fare */}
           <div className="p-4 border-b flex items-center gap-2 text-xl font-bold text-gray-800 px-5">
             <i className="ri-money-rupee-circle-fill text-[#601895] p-2"></i> ₹
-            {(80 + Math.random() * 50).toFixed(2)}
+            {Number(fare || 0).toFixed(2)}
           </div>
 
           {/* Cancel */}

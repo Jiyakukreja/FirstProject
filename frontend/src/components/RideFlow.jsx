@@ -8,7 +8,7 @@ const RideFlow = () => {
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowWaiting(true);  // 8s baad switch karega
-    }, 2000);
+    }, 8000);
 
     return () => clearTimeout(timer);
   }, []);
