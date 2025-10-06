@@ -16,15 +16,20 @@ const CaptainHome = () => {
   // --- Handle ride requests + location updates ---
   useEffect(() => {
     if (!socket || !captain?._id) return;
-
-    console.log("🧑‍✈️ Captain active:", captain._id);
-    console.log("🛰️ Socket connected with ID:", socket.id);
+    
+    // Ensure captain is properly joined when component mounts
+    socket.emit("join", { role: "captain", userId: captain._id });
 
     // --- Handle ride requests ---
     const handleRideRequest = (rideData) => {
-      console.log("🚖 New ride request received:", rideData);
+      console.log("New Ride Request:", {
+        pickup: rideData.pickup,
+        destination: rideData.destination,
+        fare: rideData.fare,
+        user: rideData.user
+      });
+      
       setShowPopup(true);
-      gsap.fromTo("#ridePopup", { y: "-100%", opacity: 0 }, { y: "0%", opacity: 1, duration: 0.8 });
     };
 
     socket.on("rideRequest", handleRideRequest);
@@ -44,7 +49,7 @@ const CaptainHome = () => {
           console.log("📍 Sending location update:", data);
           socket.emit("update-location-captain", data);
         },
-        (err) => console.error("❌ Geolocation error:", err)
+        (err) => {/* Silent error */}
       );
     };
 

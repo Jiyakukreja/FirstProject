@@ -20,6 +20,9 @@ module.exports.createRide = async (req, res) => {
             vehicleType
         });
 
+        // Populate user information
+        await ride.populate('user', 'fullname phone email');
+
         const pickupCoords = await mapService.getAddressCoordinate(pickup);
         console.log(" Pickup coordinates:", pickupCoords);
 
@@ -33,17 +36,14 @@ module.exports.createRide = async (req, res) => {
         ride.otp = ""
         
         captainsInTheRadius.forEach((captain) => {
-  if (captain.socketId) {
-    sendMessageToSocketId(
-      captain.socketId,       
-      "rideRequest",         
-      ride                    
-    );
-    console.log("🎯 Sent ride to captain:", captain._id, ride);
-  } else {
-    console.log("❌ Captain socketId missing:", captain._id);
-  }
-});
+          if (captain.socketId) {
+            sendMessageToSocketId(
+              captain.socketId,       
+              "rideRequest",         
+              ride                    
+            );
+          }
+        });
 
 
         return res.status(201).json({ ride, pickupCoords, captainsInTheRadius });

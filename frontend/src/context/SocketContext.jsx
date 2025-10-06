@@ -20,11 +20,11 @@ const SocketProvider = ({ children }) => {
   // --- Connection logs ---
   useEffect(() => {
     socket.on("connect", () => {
-      console.log("✅ Connected to server:", socket.id);
+      // Silent connection
     });
 
     socket.on("disconnect", (reason) => {
-      console.warn("⚠️ Disconnected from server:", reason);
+      // Silent disconnection
     });
 
     return () => socket.off();
@@ -34,12 +34,10 @@ const SocketProvider = ({ children }) => {
   useEffect(() => {
     if (user?._id && !userJoined.current) {
       socket.emit("join", { role: "user", userId: user._id });
-      console.log("📤 User joined socket:", user._id);
       userJoined.current = true;
 
       socket.on("welcome", (msg) => {
-        if (msg.role?.toLowerCase() === "user")
-          console.log("🎉 Welcome message for user:", msg);
+        // Silent welcome
       });
     }
   }, [user]);
@@ -48,12 +46,21 @@ const SocketProvider = ({ children }) => {
   useEffect(() => {
     if (captain?._id && !captainJoined.current) {
       socket.emit("join", { role: "captain", userId: captain._id });
-      console.log("📤 Captain joined socket:", captain._id);
       captainJoined.current = true;
 
+      // Handle welcome message
       socket.on("welcome", (msg) => {
-        if (msg.role?.toLowerCase() === "captain")
-          console.log("🎉 Welcome message for captain:", msg);
+        // Silent welcome
+      });
+
+      // Handle ride requests - only log ride request with user info
+      socket.on("rideRequest", (rideData) => {
+        console.log("Ride Request:", {
+          pickup: rideData.pickup,
+          destination: rideData.destination,
+          fare: rideData.fare,
+          user: rideData.user
+        });
       });
     }
   }, [captain]);
