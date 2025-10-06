@@ -3,7 +3,7 @@ import map from "../images/map.png";
 import "remixicon/fonts/remixicon.css";
 import { gsap } from "gsap";
 import RidePopUp from "../components/RidePopUp";
-import { CaptainDataContext } from "../context/CaptainContext"; 
+import { CaptainDataContext } from "../context/CaptainContext";
 import { SocketContext } from "../context/SocketContext";
 
 const CaptainHome = () => {
@@ -13,26 +13,51 @@ const CaptainHome = () => {
   const [online, setOnline] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
 
+  // --- Handle ride requests + location updates ---
   useEffect(() => {
-  if (!socket) return;
+    if (!socket || !captain?._id) return;
 
-  const handleRideRequest = (rideData) => {
-    console.log("🚖 New ride request received:", rideData);
-    setShowPopup(true);
-    gsap.fromTo(
-      "#ridePopup",
-      { y: "-100%", opacity: 0 },
-      { y: "0%", opacity: 1, duration: 0.8, ease: "power3.out" }
-    );
-  };
+    console.log("🧑‍✈️ Captain active:", captain._id);
+    console.log("🛰️ Socket connected with ID:", socket.id);
 
-  socket.on("rideRequest", handleRideRequest);
+    // --- Handle ride requests ---
+    const handleRideRequest = (rideData) => {
+      console.log("🚖 New ride request received:", rideData);
+      setShowPopup(true);
+      gsap.fromTo("#ridePopup", { y: "-100%", opacity: 0 }, { y: "0%", opacity: 1, duration: 0.8 });
+    };
 
-  return () => socket.off("rideRequest", handleRideRequest);
-}, [captain, socket]);
+    socket.on("rideRequest", handleRideRequest);
 
+    // --- Update location every 15 seconds ---
+    const updateLocation = () => {
+      if (!navigator.geolocation) return;
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const data = {
+            userId: captain._id,
+            location: {
+              ltd: pos.coords.latitude,
+              lng: pos.coords.longitude,
+            },
+          };
+          console.log("📍 Sending location update:", data);
+          socket.emit("update-location-captain", data);
+        },
+        (err) => console.error("❌ Geolocation error:", err)
+      );
+    };
 
-  // Capitalize helper
+    updateLocation();
+    const locationInterval = setInterval(updateLocation, 15000); // every 15s
+
+    return () => {
+      socket.off("rideRequest", handleRideRequest);
+      clearInterval(locationInterval);
+    };
+  }, [socket, captain?._id]); // ✅ only rerun when captainId changes
+
+  // --- Capitalize helper ---
   const capitalize = (str) =>
     str ? str.charAt(0).toUpperCase() + str.slice(1).toLowerCase() : "";
 
@@ -48,17 +73,10 @@ const CaptainHome = () => {
     rating: captain?.rating || 4.8,
   };
 
-  // Ride popup animation
+  // --- Popup control ---
   useEffect(() => {
     if (online) {
-      const timer = setTimeout(() => {
-        setShowPopup(true);
-        gsap.fromTo(
-          "#ridePopup",
-          { y: "-100%", opacity: 0 },
-          { y: "0%", opacity: 1, duration: 0.8, ease: "power3.out" }
-        );
-      }, 2000);
+      const timer = setTimeout(() => setShowPopup(true), 2000);
       return () => clearTimeout(timer);
     } else {
       setShowPopup(false);
@@ -71,6 +89,7 @@ const CaptainHome = () => {
 
       {/* Right Panel */}
       <div className="absolute right-0 top-0 h-full w-[700px] bg-[#F2EDD1] shadow-2xl flex flex-col border-l border-gray-400">
+
         {/* Status Bar */}
         <div
           className={`w-full px-6 py-4 flex items-center gap-3 shadow-md border-b border-gray-400 transition-colors duration-300 ${
@@ -111,16 +130,16 @@ const CaptainHome = () => {
           <div className="bg-[#f4e9fb] p-6 rounded-2xl shadow-inner border border-gray-300">
             <div className="grid grid-cols-2 gap-5">
               {[
-                { label: "Hours", value: stats.hours, icon: "ri-time-fill", color: "text-[#601895]" },
-                { label: "Kilometers", value: `${stats.kms} km`, icon: "ri-road-map-fill", color: "text-[#601895]" },
-                { label: "Rides", value: stats.rides, icon: "ri-taxi-fill", color: "text-[#601895]" },
-                { label: "Rating", value: stats.rating, icon: "ri-star-fill", color: "text-yellow-500" },
+                { label: "Hours", value: stats.hours, icon: "ri-time-fill" },
+                { label: "Kilometers", value: `${stats.kms} km`, icon: "ri-road-map-fill" },
+                { label: "Rides", value: stats.rides, icon: "ri-taxi-fill" },
+                { label: "Rating", value: stats.rating, icon: "ri-star-fill" },
               ].map((stat, i) => (
                 <div
                   key={i}
                   className="bg-white p-5 rounded-xl shadow-md flex items-center gap-3 hover:shadow-lg transition border border-gray-200"
                 >
-                  <i className={`${stat.icon} text-3xl ${stat.color}`}></i>
+                  <i className={`${stat.icon} text-3xl text-[#601895]`}></i>
                   <div>
                     <p className="text-sm text-gray-500">{stat.label}</p>
                     <p className="text-lg font-bold">{stat.value}</p>
@@ -131,7 +150,7 @@ const CaptainHome = () => {
           </div>
         </div>
 
-        {/* Bottom Button */}
+        {/* Online/Offline Button */}
         <div className="px-6 py-5">
           <button
             onClick={() => setOnline(!online)}
@@ -142,6 +161,7 @@ const CaptainHome = () => {
         </div>
       </div>
 
+      {/* Ride Popup */}
       {showPopup && <RidePopUp setShowPopup={setShowPopup} />}
     </div>
   );

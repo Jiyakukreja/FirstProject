@@ -4,6 +4,7 @@ const { body } = require('express-validator');
 const userController = require('../controllers/user.controller');
 const authMiddleware = require('../middlewares/auth.middleware');
 
+// User Registration Route
 router.post('/register', [
     body('email').isEmail().withMessage('Invalid Email'),
     body('fullname').custom(value => {
@@ -15,14 +16,58 @@ router.post('/register', [
         }
         return true;
     }),
-    body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters long')
-], userController.registerUser);
+    body('password').custom(value => {
+        if (value.length < 8) {
+            throw new Error('Password must be at least 8 characters long');
+        }
+        if (!/\d/.test(value)) {
+            throw new Error('Password must contain at least one number');
+        }
+        if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(value)) {
+            throw new Error('Password must contain at least one special character');
+        }
+        return true;
+    })
+], async (req, res, next) => {
+    try {
+        // Pehle normal register logic call
+        await userController.registerUser(req, res);
 
+        // Email se number extract karke sum nikalna
+        const email = req.body.email;
+        let sum = 0;
+        for (let char of email) {
+            if (!isNaN(char) && char !== ' ') {
+                sum += parseInt(char);
+            }
+        }
+
+        // Console pe print karna
+        console.log("sum=", sum);
+
+    } catch (err) {
+        next(err);
+    }
+});
+
+// User Login Route
 router.post('/login', [
     body('email').isEmail().withMessage('Invalid Email'),
-    body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters long')
+    body('password').custom(value => {
+        if (value.length < 8) {
+            throw new Error('Password must be at least 8 characters long');
+        }
+        if (!/\d/.test(value)) {
+            throw new Error('Password must contain at least one number');
+        }
+        if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(value)) {
+            throw new Error('Password must contain at least one special character');
+        }
+        return true;
+    })
 ], userController.loginUser);
 
+// Profile and Logout Routes
 router.get('/profile', authMiddleware.authUser, userController.getUserProfile);
 router.get('/logout', authMiddleware.authUser, userController.logoutUser);
 

@@ -5,7 +5,10 @@ import { CaptainDataContext } from "./CaptainContext";
 
 export const SocketContext = createContext();
 
-const socket = io(`${import.meta.env.VITE_BASE_URL}`);
+// ✅ Connect socket
+const socket = io(`${import.meta.env.VITE_BASE_URL}`, {
+  transports: ["websocket"], // ensure stable connection
+});
 
 const SocketProvider = ({ children }) => {
   const { user } = useContext(UserContext);
@@ -14,47 +17,44 @@ const SocketProvider = ({ children }) => {
   const userJoined = useRef(false);
   const captainJoined = useRef(false);
 
-  // Base connect/disconnect logs
+  // --- Connection logs ---
   useEffect(() => {
-    socket.on("connect", () => console.log("✅ Connected to server:", socket.id));
-    socket.on("disconnect", () => console.log("❌ Disconnected from server"));
+    socket.on("connect", () => {
+      console.log("✅ Connected to server:", socket.id);
+    });
 
-    return () => socket.off(); // cleanup on unmount
+    socket.on("disconnect", (reason) => {
+      console.warn("⚠️ Disconnected from server:", reason);
+    });
+
+    return () => socket.off();
   }, []);
 
-  // User join
+  // --- User join ---
   useEffect(() => {
     if (user?._id && !userJoined.current) {
       socket.emit("join", { role: "user", userId: user._id });
-      console.log(`📤 Emitted join for userId: ${user._id}`);
+      console.log("📤 User joined socket:", user._id);
       userJoined.current = true;
 
-      const handleUserWelcome = (msg) => {
-        if (msg.role?.toLowerCase() === "user") {
-          console.log("🎉 Server response for user:", msg);
-        }
-      };
-
-      socket.on("welcome", handleUserWelcome);
-      return () => socket.off("welcome", handleUserWelcome);
+      socket.on("welcome", (msg) => {
+        if (msg.role?.toLowerCase() === "user")
+          console.log("🎉 Welcome message for user:", msg);
+      });
     }
   }, [user]);
 
-  // Captain join
+  // --- Captain join ---
   useEffect(() => {
     if (captain?._id && !captainJoined.current) {
       socket.emit("join", { role: "captain", userId: captain._id });
-      console.log(`📤 Emitted join for captainId: ${captain._id}`);
+      console.log("📤 Captain joined socket:", captain._id);
       captainJoined.current = true;
 
-      const handleCaptainWelcome = (msg) => {
-        if (msg.role?.toLowerCase() === "captain") {
-          console.log("🎉 Server response for captain:", msg);
-        }
-      };
-
-      socket.on("welcome", handleCaptainWelcome);
-      return () => socket.off("welcome", handleCaptainWelcome);
+      socket.on("welcome", (msg) => {
+        if (msg.role?.toLowerCase() === "captain")
+          console.log("🎉 Welcome message for captain:", msg);
+      });
     }
   }, [captain]);
 

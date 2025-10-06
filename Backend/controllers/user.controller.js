@@ -10,12 +10,15 @@ module.exports.registerUser = async (req, res) => {
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { fullname, email, password, vehicle } = req.body;
+    let { fullname, email, password, vehicle } = req.body;
 
     // Extra safety check
     if (!fullname?.firstname || !fullname?.lastname) {
       return res.status(400).json({ message: 'First and last name are required' });
     }
+
+    // Normalize email
+    email = email.toLowerCase().trim();
 
     // Check if user exists
     const existingUser = await userModel.findOne({ email });
@@ -37,13 +40,20 @@ module.exports.registerUser = async (req, res) => {
       vehicle
     });
 
-  // Generate token
-  const token = user.generateAuthToken();
-  // remove password before sending response
-  if (user && user.password) user.password = undefined;
-  res.status(201).json({ token, user });
+    // Generate token
+    const token = user.generateAuthToken();
+
+    // remove password before sending response
+    if (user && user.password) user.password = undefined;
+
+    res.status(201).json({ token, user });
   } catch (err) {
     console.error('Register Error:', err);
+
+    if (err.code === 11000) {
+      return res.status(400).json({ message: 'Email already registered' });
+    }
+
     res.status(500).json({ message: 'Internal server error' });
   }
 };
@@ -57,16 +67,17 @@ module.exports.loginUser = async (req, res) => {
 
     const { email, password } = req.body;
 
-    const user = await userModel.findOne({ email }).select('+password');
+    const user = await userModel.findOne({ email: email.toLowerCase().trim() }).select('+password');
     if (!user) return res.status(401).json({ message: 'Invalid email or password' });
 
     const isMatch = await user.comparePassword(password);
     if (!isMatch) return res.status(401).json({ message: 'Invalid email or password' });
 
-  const token = user.generateAuthToken();
-  res.cookie('token', token, { httpOnly: true });
-  if (user && user.password) user.password = undefined;
-  res.status(200).json({ token, user });
+    const token = user.generateAuthToken();
+    res.cookie('token', token, { httpOnly: true });
+    if (user && user.password) user.password = undefined;
+
+    res.status(200).json({ token, user });
   } catch (err) {
     console.error('Login Error:', err);
     res.status(500).json({ message: 'Internal server error' });

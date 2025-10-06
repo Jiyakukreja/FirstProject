@@ -7,10 +7,12 @@ const app = express();
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
 
-// ✅ CORS config sabse pehle lagana hai
 app.use(cors({
-  origin: "http://localhost:5173",  // frontend ka address
-  credentials: true                 // cookies/auth allow karega
+  origin: [
+    "http://localhost:5173",                  // local frontend
+    "https://h9q017nc-5173.inc1.devtunnels.ms" // forwarded dev tunnel
+  ],
+  credentials: true
 }));
 
 app.use(cookieParser());

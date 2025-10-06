@@ -10,14 +10,14 @@ import SocketProvider from './context/SocketContext.jsx';
 const root = createRoot(document.getElementById('root'));
 root.render(
   <StrictMode>
-    <UserProvider>
-      <CaptainProvider>   
-        <SocketProvider>  
-          <BrowserRouter>
+    <BrowserRouter>
+      <UserProvider>
+        <CaptainProvider>
+          <SocketProvider>
             <App />
-          </BrowserRouter>
-        </SocketProvider>
-      </CaptainProvider>
-    </UserProvider>
+          </SocketProvider>
+        </CaptainProvider>
+      </UserProvider>
+    </BrowserRouter>
   </StrictMode>
 );
