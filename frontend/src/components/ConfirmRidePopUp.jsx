@@ -1,14 +1,16 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useContext } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import gsap from "gsap";
 import { useNavigate } from "react-router-dom";
+import { SocketContext } from "../context/SocketContext";
 
 const ConfirmRidePopUp = ({ ride, onIgnore }) => {
   const [step, setStep] = useState(1); // 1: confirm, 2: ride details, 3: OTP for pickup
-  const [otp, setOtp] = useState(["1", "2", "3", "4"]);
+  const [otp, setOtp] = useState(["", "", "", ""]);
   const [error, setError] = useState("");
   const inputRefs = useRef([]);
   const navigate = useNavigate();
+  const { acceptRide, updateRideStatus } = useContext(SocketContext);
 
   const gstRate = 0.18;
   const gstAmount = Math.round(ride.fare * gstRate);
@@ -43,12 +45,26 @@ const ConfirmRidePopUp = ({ ride, onIgnore }) => {
 
   const verifyOtp = () => {
     const enteredOtp = otp.join("");
-    if (enteredOtp === "1234") {
+    const expectedOtp = ride.otp || "1234";
+    
+    if (enteredOtp === expectedOtp) {
       setError("");
-      navigate("/Captain-Riding");
+      
+      // Accept the ride and update status
+      acceptRide(ride);
+      updateRideStatus('in-progress');
+      
+      // Navigate to riding page
+      navigate("/captain-riding");
     } else {
-      setError("Invalid OTP. Please enter 1234.");
+      setError(`Invalid OTP. Please enter ${expectedOtp}.`);
     }
+  };
+
+  // Handle confirming the ride
+  const handleConfirmRide = () => {
+    acceptRide(ride);
+    setStep(2);
   };
 
   return (
@@ -70,7 +86,7 @@ const ConfirmRidePopUp = ({ ride, onIgnore }) => {
             <div className="space-y-3 text-gray-700 text-lg font-serif">
               <div className="flex justify-between">
                 <span className="font-semibold">Customer:</span>
-                <span>{ride.driver.name}</span>
+                <span>{ride.user?.fullname ? `${ride.user.fullname.firstname} ${ride.user.fullname.lastname}` : 'Unknown'}</span>
               </div>
               <div className="flex justify-between">
                 <span className="font-semibold">Pickup:</span>
@@ -78,7 +94,7 @@ const ConfirmRidePopUp = ({ ride, onIgnore }) => {
               </div>
               <div className="flex justify-between">
                 <span className="font-semibold">Drop:</span>
-                <span>{ride.drop}</span>
+                <span>{ride.destination}</span>
               </div>
               <div className="flex justify-between">
                 <span className="font-semibold">Fare:</span>
@@ -94,7 +110,7 @@ const ConfirmRidePopUp = ({ ride, onIgnore }) => {
                 Cancel
               </button>
               <button
-                onClick={() => setStep(2)}
+                onClick={handleConfirmRide}
                 className="px-5 py-2 bg-gradient-to-r from-[#601895] to-[#280A3E] text-white rounded-lg font-semibold hover:scale-105 transition shadow-lg"
               >
                 Confirm
@@ -121,7 +137,7 @@ const ConfirmRidePopUp = ({ ride, onIgnore }) => {
             <div className="space-y-3 text-gray-700 text-lg mb-6 font-serif">
               <div className="flex justify-between">
                 <span className="font-semibold">Customer:</span>
-                <span>{ride.driver.name}</span>
+                <span>{ride.user?.fullname ? `${ride.user.fullname.firstname} ${ride.user.fullname.lastname}` : 'Unknown'}</span>
               </div>
               <div className="flex justify-between">
                 <span className="font-semibold">Pickup:</span>
@@ -129,7 +145,7 @@ const ConfirmRidePopUp = ({ ride, onIgnore }) => {
               </div>
               <div className="flex justify-between">
                 <span className="font-semibold">Drop:</span>
-                <span>{ride.drop}</span>
+                <span>{ride.destination}</span>
               </div>
               <div className="flex justify-between">
                 <span className="font-semibold">Fare:</span>
@@ -197,7 +213,7 @@ const ConfirmRidePopUp = ({ ride, onIgnore }) => {
             <div className="space-y-3 text-gray-700 text-lg font-serif mb-4">
               <div className="flex justify-between">
                 <span className="font-semibold">Customer:</span>
-                <span>{ride.driver.name}</span>
+                <span>{ride.user?.fullname ? `${ride.user.fullname.firstname} ${ride.user.fullname.lastname}` : 'Unknown'}</span>
               </div>
               <div className="flex justify-between">
                 <span className="font-semibold">Pickup:</span>
@@ -205,7 +221,7 @@ const ConfirmRidePopUp = ({ ride, onIgnore }) => {
               </div>
               <div className="flex justify-between">
                 <span className="font-semibold">Drop:</span>
-                <span>{ride.drop}</span>
+                <span>{ride.destination}</span>
               </div>
             </div>
 

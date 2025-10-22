@@ -15,6 +15,8 @@ const SocketProvider = ({ children }) => {
   const { captain } = useContext(CaptainDataContext);
   const [rideRequest, setRideRequest] = useState(null);
   const [activeRides, setActiveRides] = useState([]);
+  const [currentRide, setCurrentRide] = useState(null);
+  const [rideStatus, setRideStatus] = useState('idle'); // idle, accepted, in-progress, completed
 
   const userJoined = useRef(false);
   const captainJoined = useRef(false);
@@ -35,23 +37,54 @@ const SocketProvider = ({ children }) => {
       setRideRequest(data);
       setActiveRides(prev => {
         const newRide = {
+          _id: data._id,
           id: Date.now(),
           pickup: data.pickup,
           destination: data.destination,
           fare: data.fare,
           distance: data.distance || "Calculating...",
           estimatedTime: data.estimatedTime || "Calculating...",
-          user: data.user
+          user: data.user,
+          otp: data.otp,
+          status: 'requested'
         };
         console.log("📝 Adding new ride to activeRides:", newRide);
         return [...prev, newRide];
       });
     });
 
+    // Handle ride acceptance confirmation
+    socket.on("rideAccepted", (data) => {
+      console.log("✅ Ride accepted:", data);
+      setCurrentRide(data);
+      setRideStatus('accepted');
+      // Remove from active rides
+      setActiveRides(prev => prev.filter(ride => ride._id !== data._id));
+    });
+
+    // Handle ride status updates
+    socket.on("rideUpdate", (data) => {
+      console.log("🔄 Ride update:", data);
+      if (currentRide && currentRide._id === data._id) {
+        setCurrentRide(prev => ({ ...prev, ...data }));
+        setRideStatus(data.status);
+      }
+    });
+
+    // Handle ride completion
+    socket.on("rideCompleted", (data) => {
+      console.log("🏁 Ride completed:", data);
+      setCurrentRide(null);
+      setRideStatus('idle');
+    });
+
     return () => {
       socket.off("connect");
       socket.off("disconnect");
       socket.off("rideRequest");
+      socket.off("rideAccepted");
+      socket.off("rideUpdate");
+      socket.off("rideCompleted");
     };
   }, []);
 
@@ -80,13 +113,48 @@ const SocketProvider = ({ children }) => {
     }
   }, [captain]);
 
+  // Helper function to accept a ride
+  const acceptRide = (rideData) => {
+    console.log("🤝 Accepting ride:", rideData);
+    setCurrentRide(rideData);
+    setRideStatus('accepted');
+    
+    // Emit ride acceptance to backend
+    socket.emit("acceptRide", {
+      rideId: rideData._id,
+      captainId: captain._id,
+      captainLocation: {
+        lat: 0, // Get from GPS
+        lng: 0  // Get from GPS
+      }
+    });
+    
+    // Remove from active rides
+    setActiveRides(prev => prev.filter(ride => ride._id !== rideData._id));
+  };
+
+  // Helper function to update ride status
+  const updateRideStatus = (status, data = {}) => {
+    setRideStatus(status);
+    socket.emit("updateRideStatus", {
+      rideId: currentRide?._id,
+      status,
+      ...data
+    });
+  };
+
   return (
     <SocketContext.Provider value={{ 
       socket, 
       rideRequest, 
       activeRides, 
+      currentRide,
+      rideStatus,
       setActiveRides,
-      setRideRequest 
+      setRideRequest,
+      acceptRide,
+      updateRideStatus,
+      setCurrentRide
     }}>
       {children}
     </SocketContext.Provider>

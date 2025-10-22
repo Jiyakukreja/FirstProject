@@ -1,23 +1,37 @@
-import React, { useState } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import mapImg from "../images/map.png"; // apna map image lagao
 import "remixicon/fonts/remixicon.css";
+import { SocketContext } from "../context/SocketContext";
 
 const CaptainRiding = () => {
   const [showFinish, setShowFinish] = useState(false);
+  const [distance, setDistance] = useState("4 kms away");
   const navigate = useNavigate();
+  const { currentRide, rideStatus, updateRideStatus } = useContext(SocketContext);
 
-  // Sample ride data
-  const ride = {
-    passenger: "Harshi Pateliya",
-    pickup: "562/11-A, Kankariya Talab, Bhopal",
-    drop: "562/11-A, Kankariya Talab, Bhopal",
-    fare: 193.2,
-    distance: "2.2 KM",
-    payment: "Cash",
-    img: "https://randomuser.me/api/portraits/women/45.jpg",
+  // If no current ride, redirect back to captain home
+  useEffect(() => {
+    if (!currentRide) {
+      console.warn("No current ride data, redirecting to captain home");
+      navigate("/captain-home");
+    }
+  }, [currentRide, navigate]);
+
+  // Default ride data if currentRide is not available (fallback)
+  const ride = currentRide || {
+    user: { fullname: { firstname: "Unknown", lastname: "User" }},
+    pickup: "Unknown Location",
+    destination: "Unknown Destination", 
+    fare: 0,
+    distance: "0 KM",
+    payment: "Cash"
   };
+
+  const passenger = ride.user?.fullname 
+    ? `${ride.user.fullname.firstname} ${ride.user.fullname.lastname}`
+    : "Unknown User";
 
   return (
     <div
@@ -37,7 +51,7 @@ const CaptainRiding = () => {
           <div className="flex items-center gap-2 ">
             <i className="ri-map-pin-2-fill text-[#601895] text-xl"></i>
             <p className="text-gray-900 font-bold text-lg tracking-wide">
-              4 kms away
+              {distance}
             </p>
           </div>
           <p className="text-sm text-gray-500 mt-1 ml-8">Distance</p>
@@ -93,13 +107,13 @@ const CaptainRiding = () => {
               >
                 <div className="flex items-center gap-4">
                   <img
-                    src={ride.img}
-                    alt={ride.passenger}
+                    src={ride.user?.profileImage || "https://randomuser.me/api/portraits/women/45.jpg"}
+                    alt={passenger}
                     className="w-12 h-12 rounded-full object-cover border"
                   />
-                  <p className="font-bold text-xl">{ride.passenger}</p>
+                  <p className="font-bold text-xl">{passenger}</p>
                 </div>
-                <p className="font-bold text-gray-800">{ride.distance}</p>
+                <p className="font-bold text-gray-800">{ride.distance || "Calculating..."}</p>
               </div>
 
               {/* Ride Details */}
@@ -116,7 +130,7 @@ const CaptainRiding = () => {
                   <i className="ri-map-pin-user-fill text-[#601895] text-xl"></i>
                   <div>
                     <p className="font-bold">Drop</p>
-                    <p>{ride.drop}</p>
+                    <p>{ride.destination}</p>
                   </div>
                 </div>
 
@@ -125,7 +139,7 @@ const CaptainRiding = () => {
                   <div>
                     <p className="font-bold">Fare</p>
                     <p>
-                      ₹{ride.fare} • {ride.payment}
+                      ₹{ride.fare} • {ride.payment || "Cash"}
                     </p>
                   </div>
                 </div>
@@ -134,7 +148,10 @@ const CaptainRiding = () => {
 
             {/* Finish Button */}
             <button
-              onClick={() => navigate("/captain/home")}
+              onClick={() => {
+                updateRideStatus('completed');
+                navigate("/captain-home");
+              }}
               className="w-full py-4 bg-gradient-to-r from-green-600 to-green-800 
               text-white rounded-xl font-bold text-lg shadow-lg 
               hover:scale-[1.02] transition"

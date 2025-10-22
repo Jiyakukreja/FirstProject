@@ -9,7 +9,7 @@ const RidePopUp = ({ setShowPopup }) => {
   const [expanded, setExpanded] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [selectedRide, setSelectedRide] = useState(null);
-  const { activeRides } = useContext(SocketContext);
+  const { activeRides, setActiveRides } = useContext(SocketContext);
   const navigate = useNavigate();
 
   const requestCount = activeRides.length;
@@ -133,7 +133,14 @@ const RidePopUp = ({ setShowPopup }) => {
                   {/* Buttons */}
                   <div className="mt-3 flex justify-end gap-3">
                     <button
-                      onClick={() => setShowPopup(false)}
+                      onClick={() => {
+                        // Remove the ignored ride from active rides
+                        setActiveRides(prev => prev.filter(r => r.id !== ride.id));
+                        // If no more rides, close popup
+                        if (activeRides.length <= 1) {
+                          setShowPopup(false);
+                        }
+                      }}
                       className="flex items-center gap-2 px-4 py-1 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition border-2 border-[#601895] shadow text-sm"
                     >
                       <i className="ri-close-circle-line text-lg"></i> Ignore 
@@ -163,7 +170,15 @@ const RidePopUp = ({ setShowPopup }) => {
                   setShowPopup(false);
                   navigate("/captain-riding");
                 }}
-                onIgnore={() => { setShowConfirm(false); setShowPopup(false); }}
+                onIgnore={() => { 
+                  setShowConfirm(false); 
+                  // Remove ignored ride from active rides
+                  setActiveRides(prev => prev.filter(r => r.id !== selectedRide.id));
+                  // Close popup if no more rides
+                  if (activeRides.length <= 1) {
+                    setShowPopup(false);
+                  }
+                }}
               />
             )}
           </motion.div>
