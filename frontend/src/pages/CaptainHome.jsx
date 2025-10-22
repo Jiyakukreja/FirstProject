@@ -8,7 +8,7 @@ import { SocketContext } from "../context/SocketContext";
 
 const CaptainHome = () => {
   const { captain } = useContext(CaptainDataContext);
-  const { socket } = useContext(SocketContext);
+  const { socket, activeRides } = useContext(SocketContext);
 
   const [online, setOnline] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
@@ -69,6 +69,11 @@ const CaptainHome = () => {
   const fullname = captain?.fullname
     ? `${capitalize(captain.fullname.firstname)} ${capitalize(captain.fullname.lastname)}`
     : "Captain Name";
+
+  // Debug: Show active rides in console
+  useEffect(() => {
+    console.log("🔍 Active rides updated:", activeRides);
+  }, [activeRides]);
 
   const earnings = captain?.earnings || "₹12,540";
   const stats = {
@@ -163,6 +168,23 @@ const CaptainHome = () => {
           >
             {online ? "Go Offline" : "Go Online"}
           </button>
+          
+          {/* Active Rides Indicator */}
+          {activeRides.length > 0 && (
+            <div className="mt-3 p-3 bg-yellow-100 border border-yellow-300 rounded-xl">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-yellow-800">
+                  🚗 {activeRides.length} Active Ride Request{activeRides.length > 1 ? 's' : ''}
+                </span>
+                <button
+                  onClick={() => setShowPopup(true)}
+                  className="text-yellow-600 hover:text-yellow-800 text-sm font-semibold"
+                >
+                  View
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

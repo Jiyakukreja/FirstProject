@@ -1,130 +1,19 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import "remixicon/fonts/remixicon.css";
-import { useNavigate } from "react-router-dom"; // 👈 Add this
+import { useNavigate } from "react-router-dom";
 import ConfirmRidePopUp from "./ConfirmRidePopUp";
-
-// Sample rides data (same as your code)
-const allRides = [
-  {
-    id: 1,
-    pickup: "Connaught Place",
-    drop: "IGI Airport",
-    fare: 450,
-    distance: "18 km",
-    time: "35 mins",
-    driver: {
-      name: "Ravi Kumar",
-      img: "https://randomuser.me/api/portraits/men/32.jpg",
-    },
-  },
-  {
-    id: 2,
-    pickup: "Saket",
-    drop: "Noida",
-    fare: 320,
-    distance: "12 km",
-    time: "25 mins",
-    driver: {
-      name: "Amit Sharma",
-      img: "https://randomuser.me/api/portraits/men/45.jpg",
-    },
-  },
-  {
-    id: 3,
-    pickup: "Rajouri Garden",
-    drop: "Gurgaon",
-    fare: 600,
-    distance: "25 km",
-    time: "50 mins",
-    driver: {
-      name: "Suresh Gupta",
-      img: "https://randomuser.me/api/portraits/men/75.jpg",
-    },
-  },
-  {
-    id: 4,
-    pickup: "Karol Bagh",
-    drop: "Dwarka",
-    fare: 380,
-    distance: "15 km",
-    time: "30 mins",
-    driver: {
-      name: "Mohit Verma",
-      img: "https://randomuser.me/api/portraits/men/12.jpg",
-    },
-  },
-  {
-    id: 5,
-    pickup: "Janakpuri",
-    drop: "Cyber City",
-    fare: 520,
-    distance: "20 km",
-    time: "40 mins",
-    driver: {
-      name: "Deepak Singh",
-      img: "https://randomuser.me/api/portraits/men/64.jpg",
-    },
-  },
-  {
-    id: 6,
-    pickup: "Lajpat Nagar",
-    drop: "Gurgaon",
-    fare: 580,
-    distance: "23 km",
-    time: "45 mins",
-    driver: {
-      name: "Rahul Mehta",
-      img: "https://randomuser.me/api/portraits/men/28.jpg",
-    },
-  },
-  {
-    id: 7,
-    pickup: "Vasant Kunj",
-    drop: "Hauz Khas",
-    fare: 250,
-    distance: "10 km",
-    time: "20 mins",
-    driver: {
-      name: "Arjun Patel",
-      img: "https://randomuser.me/api/portraits/men/38.jpg",
-    },
-  },
-  {
-    id: 8,
-    pickup: "Patel Nagar",
-    drop: "South Ex",
-    fare: 410,
-    distance: "17 km",
-    time: "32 mins",
-    driver: {
-      name: "Karan Yadav",
-      img: "https://randomuser.me/api/portraits/men/58.jpg",
-    },
-  },
-  {
-    id: 9,
-    pickup: "Preet Vihar",
-    drop: "Connaught Place",
-    fare: 300,
-    distance: "12 km",
-    time: "22 mins",
-    driver: {
-      name: "Manoj Tiwari",
-      img: "https://randomuser.me/api/portraits/men/82.jpg",
-    },
-  },
-];
+import { SocketContext } from "../context/SocketContext";
 
 const RidePopUp = ({ setShowPopup }) => {
   const [expanded, setExpanded] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [selectedRide, setSelectedRide] = useState(null);
+  const { activeRides } = useContext(SocketContext);
+  const navigate = useNavigate();
 
-  const navigate = useNavigate(); // 👈 Add this
-
-  const requestCount = Math.floor(Math.random() * 5) + 5;
-  const rides = allRides.slice(0, requestCount);
+  const requestCount = activeRides.length;
+  const rides = activeRides;
 
   return (
     <AnimatePresence>
@@ -150,14 +39,20 @@ const RidePopUp = ({ setShowPopup }) => {
               <i className="ri-taxi-line text-[#601895] mr-2"></i>
               {requestCount} New Ride Requests
             </h2>
-            <div className="space-y-2 text-gray-700 mb-6 text-lg">
-              <p><span className="font-semibold">Pickup:</span> {rides[0].pickup}</p>
-              <p><span className="font-semibold">Drop:</span> {rides[0].drop}</p>
-              <p><span className="font-semibold">Fare:</span> <span className="text-[#601895] font-bold">₹{rides[0].fare}</span></p>
-              <p><span className="font-semibold">Distance:</span> {rides[0].distance}</p>
-            </div>
+            {rides.length > 0 ? (
+              <div className="space-y-2 text-gray-700 mb-6 text-lg">
+                <p><span className="font-semibold">Pickup:</span> {rides[0].pickup}</p>
+                <p><span className="font-semibold">Drop:</span> {rides[0].destination}</p>
+                <p><span className="font-semibold">Fare:</span> <span className="text-[#601895] font-bold">₹{rides[0].fare}</span></p>
+                <p><span className="font-semibold">Distance:</span> {rides[0].distance}</p>
+              </div>
+            ) : (
+              <div className="space-y-2 text-gray-700 mb-6 text-lg">
+                <p className="text-center">Waiting for ride requests...</p>
+              </div>
+            )}
             <p className="text-center text-[#601895] font-semibold animate-pulse">
-              Tap to explore more rides
+              {rides.length > 0 ? "Tap to explore more rides" : "No requests yet"}
             </p>
           </div>
         </motion.div>
@@ -200,7 +95,7 @@ const RidePopUp = ({ setShowPopup }) => {
 
             {/* Ride Listings */}
             <div className="flex-1 overflow-y-auto p-4 space-y-6 bg-[#f4e9fb] rounded-b-3xl">
-              {rides.map((ride) => (
+              {rides.length > 0 ? rides.map((ride) => (
                 <motion.div
                   key={ride.id}
                   layout
@@ -209,23 +104,26 @@ const RidePopUp = ({ setShowPopup }) => {
                   {/* Driver Info */}
                   <div className="flex items-center gap-3 border border-gray-300 p-2 rounded-xl bg-[#f9f5ff]">
                     <img
-                      src={ride.driver.img}
-                      alt={ride.driver.name}
+                      src="https://randomuser.me/api/portraits/men/32.jpg"
+                      alt="Driver"
                       className="w-16 h-16 rounded-full border-2 border-[#601895] shadow"
                     />
                     <div>
                       <h2 className="text-xl font-bold text-[#280A3E] font-serif">
-                        {ride.driver.name}
+                        Ride Request
                       </h2>
+                      {ride.user && (
+                        <p className="text-sm text-gray-600">User: {ride.user.fullname?.firstname} {ride.user.fullname?.lastname}</p>
+                      )}
                     </div>
                   </div>
 
                   {/* Ride Info */}
                   <div className="mt-3 grid grid-cols-2 gap-3 text-md text-gray-700 border-2 border-gray-300 p-2 rounded-lg bg-[#f9f5ff] font-serif">
                     <p><span className="font-semibold">Pickup:</span> {ride.pickup}</p>
-                    <p><span className="font-semibold">Drop:</span> {ride.drop}</p>
+                    <p><span className="font-semibold">Drop:</span> {ride.destination}</p>
                     <p><span className="font-semibold">Distance:</span> {ride.distance}</p>
-                    <p><span className="font-semibold">Time:</span> {ride.time}</p>
+                    <p><span className="font-semibold">Time:</span> {ride.estimatedTime}</p>
                     <p className="col-span-2">
                       <span className="font-semibold">Fare:</span>{" "}
                       <span className="text-[#601895] font-bold">₹{ride.fare}</span>
@@ -248,7 +146,13 @@ const RidePopUp = ({ setShowPopup }) => {
                     </button>
                   </div>
                 </motion.div>
-              ))}
+              )) : (
+                <div className="text-center text-gray-500 py-8">
+                  <i className="ri-taxi-line text-4xl mb-4"></i>
+                  <p className="text-xl">No ride requests yet</p>
+                  <p className="text-sm">Waiting for ride requests...</p>
+                </div>
+              )}
             </div>
             {/* Confirm Ride PopUp */}
             {showConfirm && selectedRide && (
@@ -257,7 +161,7 @@ const RidePopUp = ({ setShowPopup }) => {
                 onConfirm={() => {
                   setShowConfirm(false);
                   setShowPopup(false);
-                  navigate("/captain-riding"); // 👈 Redirect to captain-riding
+                  navigate("/captain-riding");
                 }}
                 onIgnore={() => { setShowConfirm(false); setShowPopup(false); }}
               />
