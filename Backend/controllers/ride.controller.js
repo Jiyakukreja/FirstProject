@@ -43,7 +43,7 @@ module.exports.createRide = async (req, res) => {
             });
         });
 
-        // Prepare ride data for captain notification
+        // Prepare ride data for captain notification (OTP included for captain to verify at pickup)
         const rideForCaptain = {
             _id: ride._id,
             pickup: ride.pickup,
@@ -52,12 +52,12 @@ module.exports.createRide = async (req, res) => {
             distance: ride.distance,
             duration: ride.duration,
             user: ride.user,
-            otp: ride.otp,
+            otp: ride.otp,  // Captain needs OTP to verify at pickup
             status: ride.status,
             vehicleType: ride.vehicleType
         };
         
-        console.log(`📤 Sending ride request to ${captainsInTheRadius.length} captains:`, rideForCaptain);
+        console.log(`📤 Sending ride request to ${captainsInTheRadius.length} captains with OTP: ${ride.otp}`);
         
         let notificationsSent = 0;
         captainsInTheRadius.forEach((captain) => {
@@ -75,6 +75,7 @@ module.exports.createRide = async (req, res) => {
 
         console.log(`✅ Ride notifications sent to ${notificationsSent}/${captainsInTheRadius.length} captains`);
 
+        // Return ride with OTP to user (user needs to share OTP with captain at pickup)
         return res.status(201).json({ ride, pickupCoords, captainsInTheRadius });
 
     } catch (error) {

@@ -48,23 +48,48 @@ const Home = () => {
   useEffect(() => {
     const handleRideAccepted = (data) => {
       console.log("✅ Ride accepted by captain:", data);
+      console.log("   Captain info:", data.captain);
+      console.log("   OTP:", data.ride?.otp);
       setCurrentRideData(data);
-      setShowWaiting(true);
+      setRideConfirmed(true);  // Ensure we're in confirmed state
+      setShowWaiting(true);    // Show waiting screen
     };
 
     const handleRideStarted = (data) => {
       console.log("🚗 Ride started:", data);
       setCurrentRideData(data);
+      setRideConfirmed(true);  // Ensure we're in confirmed state
       setShowRiding(true);
       setShowWaiting(false);
     };
 
+    const handleRideCompleted = (data) => {
+      console.log("🏁 Ride completed:", data);
+      setCurrentRideData(data);
+      
+      // Show completion message and reset after 3 seconds
+      alert(`🎉 Ride completed! Thank you for using our service.\n\nFare: ₹${data.ride?.fare || 'N/A'}`);
+      
+      // Reset all states and go back to home
+      setTimeout(() => {
+        setRideConfirmed(false);
+        setShowWaiting(false);
+        setShowRiding(false);
+        setPickup("");
+        setDestination("");
+        setCurrentRideData(null);
+        setSelectedVehicle(null);
+      }, 1000);
+    };
+
     socket.on("rideAccepted", handleRideAccepted);
     socket.on("rideStarted", handleRideStarted);
+    socket.on("rideCompleted", handleRideCompleted);
 
     return () => {
       socket.off("rideAccepted", handleRideAccepted);
       socket.off("rideStarted", handleRideStarted);
+      socket.off("rideCompleted", handleRideCompleted);
     };
   }, [socket]);
 
@@ -130,6 +155,14 @@ const Home = () => {
       );
 
       console.log("✅ Ride Created:", response.data);
+      console.log("   OTP for this ride:", response.data.ride.otp);
+      
+      // Store ride data including OTP
+      setCurrentRideData({
+        ride: response.data.ride,
+        otp: response.data.ride.otp
+      });
+      
       setRideConfirmed(true);
       setVehiclePanelOpen(false);
       setPanelOpen(false);
@@ -206,6 +239,7 @@ const Home = () => {
         destination={destination}
         fare={fare}
         vehicleType={selectedVehicle}
+        otp={currentRideData?.otp || currentRideData?.ride?.otp}
         onCancel={() => {
           setRideConfirmed(false);
           setSelectedVehicle(null);

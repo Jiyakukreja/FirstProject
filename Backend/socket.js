@@ -338,6 +338,69 @@ function initializeSocket(server) {
             }
         });
 
+        // Handle ride completion - when captain finishes the ride
+        socket.on('completeRide', async (data) => {
+            try {
+                console.log(`🏁 Complete ride request received from socket ${socket.id}:`, data);
+                
+                const captainId = data.captainId || (socket.captain && socket.captain._id) || (socket.user && socket.user._id);
+                
+                if (!captainId) {
+                    console.log(`❌ No captain authentication for completeRide on socket ${socket.id}`);
+                    socket.emit('rideCompleteError', { 
+                        error: 'Captain not authenticated. Please reconnect.' 
+                    });
+                    return;
+                }
+                
+                const { rideId } = data;
+                
+                if (!rideId) {
+                    console.log(`❌ No rideId provided for completeRide on socket ${socket.id}`);
+                    socket.emit('rideCompleteError', { 
+                        error: 'Ride ID is required' 
+                    });
+                    return;
+                }
+                
+                console.log(`🔄 Processing ride completion: rideId=${rideId}, captainId=${captainId}`);
+                
+                // Update ride status to 'completed'
+                const ride = await require('./models/ride.model').findByIdAndUpdate(rideId, {
+                    status: 'completed',
+                    completedAt: new Date()
+                }, { new: true }).populate('user captain');
+                
+                if (!ride) {
+                    console.log(`❌ Ride ${rideId} not found for completion`);
+                    socket.emit('rideCompleteError', { 
+                        error: 'Ride not found' 
+                    });
+                    return;
+                }
+                
+                // Notify user that ride has been completed
+                if (ride.user && ride.user.socketId) {
+                    console.log(`📤 Notifying user ${ride.user._id} that ride has been completed`);
+                    sendMessageToSocketId(ride.user.socketId, 'rideCompleted', {
+                        ride,
+                        captain: ride.captain,
+                        message: 'Your ride has been completed. Thank you!'
+                    });
+                }
+                
+                // Confirm to captain
+                socket.emit('rideCompleteConfirm', { success: true, ride });
+                
+                console.log(`✅ Ride ${rideId} completed by captain ${captainId}`);
+            } catch (error) {
+                console.error(`❌ Error completing ride for socket ${socket.id}:`, error);
+                socket.emit('rideCompleteError', { 
+                    error: error.message || 'Server error during ride completion' 
+                });
+            }
+        });
+
         socket.on('disconnect', async () => {
             console.log(`🔌 Socket ${socket.id} disconnecting...`);
             

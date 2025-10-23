@@ -94,44 +94,71 @@ const RidePopUp = ({ setShowPopup }) => {
             </div>
 
             {/* Ride Listings */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-6 bg-[#f4e9fb] rounded-b-3xl">
+            <div className="flex-1 overflow-y-auto p-5 space-y-5 bg-gradient-to-b from-[#f4e9fb] to-white rounded-b-3xl">
               {rides.length > 0 ? rides.map((ride) => (
                 <motion.div
                   key={ride.id}
                   layout
-                  className="bg-white rounded-2xl shadow-xl p-3 border-2 border-[#601895] hover:shadow-2xl transition duration-200"
+                  className="bg-white rounded-2xl shadow-lg p-5 border-2 border-[#601895] hover:shadow-2xl transition duration-200"
                 >
-                  {/* Driver Info */}
-                  <div className="flex items-center gap-3 border border-gray-300 p-2 rounded-xl bg-[#f9f5ff]">
-                    <img
-                      src="https://randomuser.me/api/portraits/men/32.jpg"
-                      alt="Driver"
-                      className="w-16 h-16 rounded-full border-2 border-[#601895] shadow"
-                    />
-                    <div>
-                      <h2 className="text-xl font-bold text-[#280A3E] font-serif">
-                        Ride Request
+                  {/* User Info Header */}
+                  <div className="flex items-center gap-4 pb-4 border-b-2 border-gray-200">
+                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#601895] to-[#280A3E] flex items-center justify-center shadow-lg">
+                      <i className="ri-user-3-fill text-white text-2xl"></i>
+                    </div>
+                    <div className="flex-1">
+                      <h2 className="text-lg font-bold text-[#280A3E] font-serif">
+                        New Ride Request
                       </h2>
                       {ride.user && (
-                        <p className="text-sm text-gray-600">User: {ride.user.fullname?.firstname} {ride.user.fullname?.lastname}</p>
+                        <p className="text-sm text-gray-600 flex items-center gap-1">
+                          <i className="ri-account-circle-line"></i>
+                          {ride.user.fullname?.firstname} {ride.user.fullname?.lastname}
+                        </p>
                       )}
                     </div>
                   </div>
 
-                  {/* Ride Info */}
-                  <div className="mt-3 grid grid-cols-2 gap-3 text-md text-gray-700 border-2 border-gray-300 p-2 rounded-lg bg-[#f9f5ff] font-serif">
-                    <p><span className="font-semibold">Pickup:</span> {ride.pickup}</p>
-                    <p><span className="font-semibold">Drop:</span> {ride.destination}</p>
-                    <p><span className="font-semibold">Distance:</span> {ride.distance}</p>
-                    <p><span className="font-semibold">Time:</span> {ride.estimatedTime}</p>
-                    <p className="col-span-2">
-                      <span className="font-semibold">Fare:</span>{" "}
-                      <span className="text-[#601895] font-bold">₹{ride.fare}</span>
-                    </p>
+                  {/* Ride Details */}
+                  <div className="mt-4 space-y-3">
+                    {/* Pickup & Drop */}
+                    <div className="flex items-start gap-3">
+                      <div className="flex flex-col items-center gap-1 mt-1">
+                        <span className="w-3 h-3 bg-green-600 rounded-full"></span>
+                        <div className="w-0.5 h-10 bg-gray-300"></div>
+                        <span className="w-3 h-3 bg-purple-800 rounded-sm"></span>
+                      </div>
+                      <div className="flex-1 space-y-4">
+                        <div>
+                          <p className="text-xs text-gray-500 font-semibold">PICKUP</p>
+                          <p className="text-sm font-semibold text-gray-800">{ride.pickup}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-500 font-semibold">DESTINATION</p>
+                          <p className="text-sm font-semibold text-gray-800">{ride.destination}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Distance, Time, Fare */}
+                    <div className="grid grid-cols-3 gap-3 pt-3 border-t border-gray-200">
+                      <div className="text-center">
+                        <p className="text-xs text-gray-500 font-semibold">DISTANCE</p>
+                        <p className="text-sm font-bold text-gray-800">{ride.distance}</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-xs text-gray-500 font-semibold">TIME</p>
+                        <p className="text-sm font-bold text-gray-800">{ride.estimatedTime}</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-xs text-gray-500 font-semibold">FARE</p>
+                        <p className="text-lg font-bold text-[#601895]">₹{ride.fare}</p>
+                      </div>
+                    </div>
                   </div>
 
-                  {/* Buttons */}
-                  <div className="mt-3 flex justify-end gap-3">
+                  {/* Action Buttons */}
+                  <div className="mt-5 flex gap-3">
                     <button
                       onClick={() => {
                         // Remove the ignored ride from active rides
@@ -141,13 +168,14 @@ const RidePopUp = ({ setShowPopup }) => {
                           setShowPopup(false);
                         }
                       }}
-                      className="flex items-center gap-2 px-4 py-1 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition border-2 border-[#601895] shadow text-sm"
+                      className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-red-100 text-red-700 rounded-xl font-bold hover:bg-red-200 transition border-2 border-red-300 shadow-sm"
                     >
-                      <i className="ri-close-circle-line text-lg"></i> Ignore 
+                      <i className="ri-close-circle-line text-xl"></i> 
+                      Ignore
                     </button>
                     <button
                       onClick={() => { setSelectedRide(ride); setShowConfirm(true); }}
-                      className="flex items-center gap-2 px-4 py-1 bg-gradient-to-r from-[#601895] to-[#280A3E] text-white rounded-lg font-semibold hover:scale-105 transition shadow-lg border-2 border-[#601895] text-sm"
+                      className="flex-[2] flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-[#601895] to-[#280A3E] text-white rounded-xl font-bold hover:scale-105 transition shadow-lg"
                     >
                       <i className="ri-check-line text-lg"></i> Accept
                     </button>

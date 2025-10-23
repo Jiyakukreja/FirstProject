@@ -79,8 +79,8 @@ const SocketProvider = ({ children }) => {
     // Handle ride completion
     socket.on("rideCompleted", (data) => {
       console.log("🏁 Ride completed:", data);
-      setCurrentRide(null);
-      setRideStatus('idle');
+      setCurrentRide(data);
+      setRideStatus('completed');
     });
 
     return () => {
