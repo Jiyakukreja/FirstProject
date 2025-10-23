@@ -32,7 +32,8 @@ const Home = () => {
   const [paymentStep, setPaymentStep] = useState(null);
   const [fare, setFare] = useState(null);
   const [selectedVehicle, setSelectedVehicle] = useState(null);
-  const {socket}= useContext(SocketContext);
+  const [currentRideData, setCurrentRideData] = useState(null);
+  const {socket, currentRide, rideStatus}= useContext(SocketContext);
 
   const { user } = useContext(UserContext);
 
@@ -42,6 +43,30 @@ const Home = () => {
 
 
 }, [user]);
+
+  // 🎯 Listen for ride acceptance from captain
+  useEffect(() => {
+    const handleRideAccepted = (data) => {
+      console.log("✅ Ride accepted by captain:", data);
+      setCurrentRideData(data);
+      setShowWaiting(true);
+    };
+
+    const handleRideStarted = (data) => {
+      console.log("🚗 Ride started:", data);
+      setCurrentRideData(data);
+      setShowRiding(true);
+      setShowWaiting(false);
+    };
+
+    socket.on("rideAccepted", handleRideAccepted);
+    socket.on("rideStarted", handleRideStarted);
+
+    return () => {
+      socket.off("rideAccepted", handleRideAccepted);
+      socket.off("rideStarted", handleRideStarted);
+    };
+  }, [socket]);
 
 
   const vehiclePanelRef = useRef(null);
@@ -147,19 +172,6 @@ const Home = () => {
     }
   }, [vehiclePanelOpen]);
 
-  // Ride confirm screen timers
-  useEffect(() => {
-    let waitingTimer;
-    if (rideConfirmed) waitingTimer = setTimeout(() => setShowWaiting(true), 8000);
-    return () => clearTimeout(waitingTimer);
-  }, [rideConfirmed]);
-
-  useEffect(() => {
-    let ridingTimer;
-    if (showWaiting) ridingTimer = setTimeout(() => setShowRiding(true), 5000);
-    return () => clearTimeout(ridingTimer);
-  }, [showWaiting]);
-
   const handleSuggestionSelect = (loc) => {
     const value = typeof loc === "string" ? loc : loc.description;
     if (activeField === "pickup") setPickup(value);
@@ -170,19 +182,21 @@ const Home = () => {
 
   // --- UI Rendering ---
   if (rideConfirmed) {
-    if (showRiding) return <Riding />;
+    if (showRiding) return <Riding rideData={currentRideData} pickup={pickup} destination={destination} fare={fare?.[selectedVehicle]} />;
     if (showWaiting)
       return (
         <WaitingForDriver
           pickup={pickup}
           destination={destination}
-          fare={fare?.[selectedVehicle] || null} // <-- Passed fare here
+          fare={fare?.[selectedVehicle] || null}
+          rideData={currentRideData}
           onCancel={() => {
             setRideConfirmed(false);
             setPickup("");
             setDestination("");
             setShowWaiting(false);
             setShowRiding(false);
+            setCurrentRideData(null);
           }}
         />
       );

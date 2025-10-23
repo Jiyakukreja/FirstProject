@@ -33,7 +33,12 @@ const SocketProvider = ({ children }) => {
 
     // Global ride request handler - this will work for both user and captain
     socket.on("rideRequest", (data) => {
-      console.log("🚗 New ride request received in SocketContext:", data);
+      console.log("🚗 NEW RIDE REQUEST RECEIVED IN SOCKETCONTEXT:", data);
+      console.log("   Ride ID:", data._id);
+      console.log("   Pickup:", data.pickup);
+      console.log("   Destination:", data.destination);
+      console.log("   Fare:", data.fare);
+      
       setRideRequest(data);
       setActiveRides(prev => {
         const newRide = {
@@ -48,7 +53,7 @@ const SocketProvider = ({ children }) => {
           otp: data.otp,
           status: 'requested'
         };
-        console.log("📝 Adding new ride to activeRides:", newRide);
+        console.log("📝 Adding new ride to activeRides array. New length:", prev.length + 1);
         return [...prev, newRide];
       });
     });

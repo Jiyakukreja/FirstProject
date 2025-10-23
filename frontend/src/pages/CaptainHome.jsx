@@ -15,14 +15,17 @@ const CaptainHome = () => {
 
   // --- Handle ride requests + location updates ---
   useEffect(() => {
-    if (!socket || !captain?._id) return;
+    if (!socket || !captain?._id) {
+      console.log("⚠️ Socket or captain not ready:", { socketConnected: socket?.connected, captainId: captain?._id });
+      return;
+    }
     
-    // Ensure captain is properly joined when component mounts
-    socket.emit("join", { role: "captain", userId: captain._id });
+    console.log("🔌 CaptainHome: Setting up ride request listener for captain:", captain._id);
 
     // --- Handle ride requests ---
     const handleRideRequest = (rideData) => {
-      console.log("New Ride Request:", {
+      console.log("🚗 New Ride Request received in CaptainHome:", {
+        rideId: rideData._id,
         pickup: rideData.pickup,
         destination: rideData.destination,
         fare: rideData.fare,

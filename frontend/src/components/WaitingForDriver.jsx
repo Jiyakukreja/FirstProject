@@ -2,49 +2,31 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import mapImg from "../images/map.png";
 
-const WaitingForDriver = ({ pickup, destination, fare, onCancel }) => {
+const WaitingForDriver = ({ pickup, destination, fare, onCancel, rideData }) => {
   const [showConfirm, setShowConfirm] = useState(false);
   const navigate = useNavigate();
 
-  // Driver data
-  const drivers = [
-    {
-      name: "Ravi Kumar",
-      img: "https://randomuser.me/api/portraits/men/75.jpg",
-      car: { model: "Maruti Swift", color: "Red" },
-      plate: "CH01AB1234",
+  // Get captain data from rideData or use dummy data
+  const captain = rideData?.ride?.captain || rideData?.captain;
+  
+  const driver = captain ? {
+    name: `${captain.fullname?.firstname || ''} ${captain.fullname?.lastname || ''}`.trim() || "Driver",
+    img: "https://randomuser.me/api/portraits/men/75.jpg", // Default image
+    car: {
+      model: `${captain.vehicle?.vehicleType || 'Car'}`,
+      color: captain.vehicle?.color || "Unknown"
     },
-    {
-      name: "Amit Sharma",
-      img: "https://randomuser.me/api/portraits/men/32.jpg",
-      car: { model: "Hyundai i20", color: "White" },
-      plate: "DL09CN8765",
-    },
-    {
-      name: "Rajesh Gupta",
-      img: "https://randomuser.me/api/portraits/men/44.jpg",
-      car: { model: "Tata Nexon", color: "Blue" },
-      plate: "PB10DE4590",
-    },
-    {
-      name: "Sandeep Yadav",
-      img: "https://randomuser.me/api/portraits/men/60.jpg",
-      car: { model: "Honda Amaze", color: "Black" },
-      plate: "HR26BR7812",
-    },
-    {
-      name: "Manoj Verma",
-      img: "https://randomuser.me/api/portraits/men/12.jpg",
-      car: { model: "Toyota Innova", color: "Silver" },
-      plate: "MH12XY3456",
-    },
-  ];
+    plate: captain.vehicle?.plate || "N/A",
+  } : {
+    name: "Driver",
+    img: "https://randomuser.me/api/portraits/men/75.jpg",
+    car: { model: "Car", color: "Unknown" },
+    plate: "N/A",
+  };
 
-  // Pick random driver
-  const driver = drivers[Math.floor(Math.random() * drivers.length)];
-
-  // OTP
-  const otp = Array.from({ length: 4 }, () => Math.floor(Math.random() * 10));
+  // OTP from ride or generate random
+  const otpString = rideData?.ride?.otp || rideData?.otp || "1234";
+  const otp = otpString.split('').slice(0, 4);
 
   return (
     <div className="relative w-full h-screen">

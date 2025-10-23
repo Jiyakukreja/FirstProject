@@ -87,13 +87,28 @@ module.exports.getAutoCompleteSuggestions = async (input) => {
 module.exports.getCaptainsInTheRadius = async (ltd, lng, radius) => {
 
   //radius in km
+  console.log(`🔍 Searching for captains near [lat: ${ltd}, lng: ${lng}] within ${radius}km radius`);
 
-  const captains = await captainModel.find({
-    location: {
-      $geoWithin: {
-        $centerSphere: [[ltd, lng ], radius / 6378] // Earth's radius in km
-      }
-    }
+  // First, let's check ALL captains to see what we have
+  const allCaptains = await captainModel.find({});
+  console.log(`📊 Total captains in DB: ${allCaptains.length}`);
+  allCaptains.forEach((captain, index) => {
+    console.log(`Captain ${index + 1}:`, {
+      id: captain._id,
+      name: `${captain.fullname.firstname} ${captain.fullname.lastname}`,
+      status: captain.status,
+      socketId: captain.socketId,
+      location: captain.location
+    });
   });
-  return captains;
+
+  // Get only active captains with socketId
+  const activeCaptains = await captainModel.find({
+    status: 'active',
+    socketId: { $exists: true, $ne: null }
+  });
+  
+  console.log(`📋 Found ${activeCaptains.length} active captains with socket connection`);
+  
+  return activeCaptains;
 }

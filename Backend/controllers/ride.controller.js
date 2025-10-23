@@ -33,18 +33,47 @@ module.exports.createRide = async (req, res) => {
             2 
         );
 
-        ride.otp = ""
+        console.log(`📍 Found ${captainsInTheRadius.length} captains in radius`);
+        captainsInTheRadius.forEach((captain, index) => {
+            console.log(`Captain ${index + 1}:`, {
+                id: captain._id,
+                name: captain.fullname,
+                socketId: captain.socketId,
+                status: captain.status
+            });
+        });
+
+        // Prepare ride data for captain notification
+        const rideForCaptain = {
+            _id: ride._id,
+            pickup: ride.pickup,
+            destination: ride.destination,
+            fare: ride.fare,
+            distance: ride.distance,
+            duration: ride.duration,
+            user: ride.user,
+            otp: ride.otp,
+            status: ride.status,
+            vehicleType: ride.vehicleType
+        };
         
+        console.log(`📤 Sending ride request to ${captainsInTheRadius.length} captains:`, rideForCaptain);
+        
+        let notificationsSent = 0;
         captainsInTheRadius.forEach((captain) => {
           if (captain.socketId) {
-            sendMessageToSocketId(
+            const sent = sendMessageToSocketId(
               captain.socketId,       
               "rideRequest",         
-              ride                    
+              rideForCaptain                    
             );
+            if (sent) notificationsSent++;
+          } else {
+            console.log(`⚠️ Captain ${captain._id} has no socketId`);
           }
         });
 
+        console.log(`✅ Ride notifications sent to ${notificationsSent}/${captainsInTheRadius.length} captains`);
 
         return res.status(201).json({ ride, pickupCoords, captainsInTheRadius });
 

@@ -34,13 +34,19 @@ function initializeSocket(server) {
                         socket.user = captain; // For backward compatibility
                         socket.userRole = 'captain';
                         
-                        console.log(`✅ Captain ${data.userId} joined and stored on socket ${socket.id}`);
+                        console.log(`✅ Captain ${data.userId} (${captain.fullname.firstname} ${captain.fullname.lastname}) joined with socket ${socket.id}`);
+                        console.log(`   Status: ${captain.status}, SocketId: ${captain.socketId}`);
                         
                         // Send welcome message back to captain
                         socket.emit('welcome', { 
                             role: 'captain', 
                             message: 'Captain connected successfully',
-                            socketId: socket.id
+                            socketId: socket.id,
+                            captain: {
+                                id: captain._id,
+                                name: `${captain.fullname.firstname} ${captain.fullname.lastname}`,
+                                status: captain.status
+                            }
                         });
                     } else {
                         console.log(`❌ Captain ${data.userId} not found in database`);
@@ -265,6 +271,69 @@ function initializeSocket(server) {
                 console.error(`❌ Error updating ride status for socket ${socket.id}:`, error);
                 socket.emit('rideUpdateError', { 
                     error: error.message || 'Server error during ride status update' 
+                });
+            }
+        });
+
+        // Handle ride start - when captain starts the ride after picking up user
+        socket.on('startRide', async (data) => {
+            try {
+                console.log(`🚗 Start ride request received from socket ${socket.id}:`, data);
+                
+                const captainId = data.captainId || (socket.captain && socket.captain._id) || (socket.user && socket.user._id);
+                
+                if (!captainId) {
+                    console.log(`❌ No captain authentication for startRide on socket ${socket.id}`);
+                    socket.emit('rideStartError', { 
+                        error: 'Captain not authenticated. Please reconnect.' 
+                    });
+                    return;
+                }
+                
+                const { rideId } = data;
+                
+                if (!rideId) {
+                    console.log(`❌ No rideId provided for startRide on socket ${socket.id}`);
+                    socket.emit('rideStartError', { 
+                        error: 'Ride ID is required' 
+                    });
+                    return;
+                }
+                
+                console.log(`🔄 Processing ride start: rideId=${rideId}, captainId=${captainId}`);
+                
+                // Update ride status to 'in-progress'
+                const ride = await require('./models/ride.model').findByIdAndUpdate(rideId, {
+                    status: 'in-progress',
+                    startedAt: new Date()
+                }, { new: true }).populate('user captain');
+                
+                if (!ride) {
+                    console.log(`❌ Ride ${rideId} not found for starting`);
+                    socket.emit('rideStartError', { 
+                        error: 'Ride not found' 
+                    });
+                    return;
+                }
+                
+                // Notify user that ride has started
+                if (ride.user && ride.user.socketId) {
+                    console.log(`📤 Notifying user ${ride.user._id} that ride has started`);
+                    sendMessageToSocketId(ride.user.socketId, 'rideStarted', {
+                        ride,
+                        captain: ride.captain,
+                        message: 'Your ride has started'
+                    });
+                }
+                
+                // Confirm to captain
+                socket.emit('rideStartConfirm', { success: true, ride });
+                
+                console.log(`✅ Ride ${rideId} started by captain ${captainId}`);
+            } catch (error) {
+                console.error(`❌ Error starting ride for socket ${socket.id}:`, error);
+                socket.emit('rideStartError', { 
+                    error: error.message || 'Server error during ride start' 
                 });
             }
         });

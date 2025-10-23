@@ -6,17 +6,30 @@ import scanner from "../images/scanner.jpeg";
 import 'remixicon/fonts/remixicon.css';
 import { gsap } from "gsap";
 
-const Riding = () => {
-  const driver = {
-    name: "Ravi Kumar",
+const Riding = ({ rideData, pickup, destination: destinationProp, fare }) => {
+  // Get captain and ride data
+  const captain = rideData?.ride?.captain || rideData?.captain;
+  
+  const driver = captain ? {
+    name: `${captain.fullname?.firstname || ''} ${captain.fullname?.lastname || ''}`.trim() || "Driver",
     img: "https://randomuser.me/api/portraits/men/75.jpg",
-    car: { model: "Maruti Swift", color: "Red" },
-    plate: "CH01AB1234",
-    fare: (120).toFixed(2),
+    car: {
+      model: `${captain.vehicle?.vehicleType || 'Car'}`,
+      color: captain.vehicle?.color || "Unknown"
+    },
+    plate: captain.vehicle?.plate || "N/A",
+    fare: fare || rideData?.ride?.fare || (120).toFixed(2),
+  } : {
+    name: "Driver",
+    img: "https://randomuser.me/api/portraits/men/75.jpg",
+    car: { model: "Car", color: "Unknown" },
+    plate: "N/A",
+    fare: fare || (120).toFixed(2),
   };
 
-  const otp = Array.from({ length: 4 }, () => Math.floor(Math.random() * 10));
-  const destination = "Sector 17, Chandigarh";
+  const otpString = rideData?.ride?.otp || rideData?.otp || "1234";
+  const otp = otpString.split('').slice(0, 4);
+  const destination = destinationProp || rideData?.ride?.destination || "Destination";
 
   const navigate = useNavigate();
   const [showPopup, setShowPopup] = useState(false);

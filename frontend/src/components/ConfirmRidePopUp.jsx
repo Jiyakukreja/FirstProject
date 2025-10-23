@@ -10,7 +10,7 @@ const ConfirmRidePopUp = ({ ride, onIgnore }) => {
   const [error, setError] = useState("");
   const inputRefs = useRef([]);
   const navigate = useNavigate();
-  const { acceptRide, updateRideStatus } = useContext(SocketContext);
+  const { acceptRide, updateRideStatus, socket } = useContext(SocketContext);
 
   const gstRate = 0.18;
   const gstAmount = Math.round(ride.fare * gstRate);
@@ -50,9 +50,10 @@ const ConfirmRidePopUp = ({ ride, onIgnore }) => {
     if (enteredOtp === expectedOtp) {
       setError("");
       
-      // Accept the ride and update status
-      acceptRide(ride);
-      updateRideStatus('in-progress');
+      // Emit startRide event to backend
+      socket.emit('startRide', {
+        rideId: ride._id
+      });
       
       // Navigate to riding page
       navigate("/captain-riding");
