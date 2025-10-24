@@ -5,6 +5,7 @@ import { gsap } from "gsap";
 import RidePopUp from "../components/RidePopUp";
 import { CaptainDataContext } from "../context/CaptainContext";
 import { SocketContext } from "../context/SocketContext";
+import LiveTracking from "../components/LiveTracking";
 
 const CaptainHome = () => {
   const { captain } = useContext(CaptainDataContext);
@@ -35,7 +36,15 @@ const CaptainHome = () => {
       setShowPopup(true);
     };
 
+    // --- Handle ride completion confirmation ---
+    const handleRideCompleted = (data) => {
+      console.log("✅ Ride completed confirmation received:", data);
+      // Close any open popups
+      setShowPopup(false);
+    };
+
     socket.on("rideRequest", handleRideRequest);
+    socket.on("rideCompleted", handleRideCompleted);
 
     // --- Update location every 15 seconds ---
     const updateLocation = () => {
@@ -61,6 +70,7 @@ const CaptainHome = () => {
 
     return () => {
       socket.off("rideRequest", handleRideRequest);
+      socket.off("rideCompleted", handleRideCompleted);
       clearInterval(locationInterval);
     };
   }, [socket, captain?._id]); // ✅ only rerun when captainId changes
@@ -98,10 +108,13 @@ const CaptainHome = () => {
 
   return (
     <div className="h-screen w-screen relative font-serif">
-      <img src={map} alt="Map" className="h-full w-full object-cover absolute inset-0" />
+      {/* Live Tracking Map - Full Screen */}
+      <div className="absolute inset-0 w-full h-full">
+        <LiveTracking />
+      </div>
 
-      {/* Right Panel */}
-      <div className="absolute right-0 top-0 h-full w-[700px] bg-[#F2EDD1] shadow-2xl flex flex-col border-l border-gray-400">
+      {/* Right Panel - Overlaying the map */}
+      <div className="absolute right-0 top-0 h-full w-[700px] bg-[#F2EDD1] shadow-2xl flex flex-col border-l border-gray-400 z-10">
 
         {/* Status Bar */}
         <div

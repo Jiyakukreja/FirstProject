@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useContext } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 import logo from "../images/image.png";
 import map from "../images/map.png";
 import { useGSAP } from "@gsap/react";
@@ -18,8 +19,10 @@ import Modal from "../components/Modal";
 import AddPayment from "../components/AddPayment";
 import Cash from "../components/Cash";
 import GiftCard from "../components/GiftCard";
+import LiveTracking from "../components/LiveTracking";
 
 const Home = () => {
+  const navigate = useNavigate();
   const [pickup, setPickup] = useState("");
   const [destination, setDestination] = useState("");
   const [activeField, setActiveField] = useState(null);
@@ -67,19 +70,22 @@ const Home = () => {
       console.log("🏁 Ride completed:", data);
       setCurrentRideData(data);
       
-      // Show completion message and reset after 3 seconds
+      // Show completion message
       alert(`🎉 Ride completed! Thank you for using our service.\n\nFare: ₹${data.ride?.fare || 'N/A'}`);
       
-      // Reset all states and go back to home
+      // Reset all states
+      setRideConfirmed(false);
+      setShowWaiting(false);
+      setShowRiding(false);
+      setPickup("");
+      setDestination("");
+      setCurrentRideData(null);
+      setSelectedVehicle(null);
+      
+      // Redirect to home page
       setTimeout(() => {
-        setRideConfirmed(false);
-        setShowWaiting(false);
-        setShowRiding(false);
-        setPickup("");
-        setDestination("");
-        setCurrentRideData(null);
-        setSelectedVehicle(null);
-      }, 1000);
+        navigate("/home");
+      }, 1500);
     };
 
     socket.on("rideAccepted", handleRideAccepted);
@@ -270,7 +276,8 @@ const Home = () => {
         }}
         className="absolute inset-0"
       >
-        <img src={map} alt="Map" className="h-full w-full object-cover" />
+        <LiveTracking/>
+        
       </div>
       <img
         src={logo}
