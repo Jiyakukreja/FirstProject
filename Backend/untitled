@@ -1,0 +1,20 @@
+{
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2OGExNzM3MDc0NGMwMWI2MTgxYTIwMjIiLCJpYXQiOjE3NTU0MTEzMTIsImV4cCI6MTc1NTQ5NzcxMn0.BXJ6YBxbO7rGH7Ni7RAlLixbKrWmNAvAro_pFanK2Fw",
+    "captain": {
+        "fullname": {
+            "firstname": "test",
+            "lastname": "ko"
+        },
+        "email": "yoiiiii_email@gmail.com",
+        "password": "$2b$10$2Cq7PpPHXv.T6.WAsJCUr.12yn31ytiX3pK5W4UeU4fKtOTnm9r6.",
+        "status": "inactive",
+        "vehicle": {
+            "color": "Black",
+            "plate": "MP04XY6204",
+            "capacity": 3,
+            "vehicleType": "car"
+        },
+        "_id": "68a17370744c01b6181a2022",
+        "__v": 0
+    }
+}
